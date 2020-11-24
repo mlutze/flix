@@ -1,22 +1,40 @@
 name: Benchmark on Demand
 
 on:
-  pull_request_review_comment:
+  issue_comment:
     types: [created]
 
 jobs:
   build:
-    if: contains(github.event.comment.body, '!!!benchmark')
+    if: contains(github.event.comment.body, '!!!benchmark') && github.event.issue.pull_request
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v2
       - name: Set up JDK 1.11
         uses: actions/setup-java@v1
         with:
           java-version: 1.11
-      - name: Benchmark Feature Phases
-        run: ./gradlew run -q --args="--Xbenchmark-phases" > feature-phases.csv
-      - name: Benchmark Feature Throughput
+      - uses: actions/checkout@v2
+        name: Check out feature branch
+      - name: Benchmark feature phases
+        run: ./gradlew run -q --args="--Xbenchmark-phases" | sort | > feature-phases.csv
+      - name: Benchmark feature throughput
         run: ./gradlew run -q --args="--Xbenchmark-throughput" > feature-throughput.csv
+      - uses: actions/checkout@v2
+        name: Check out master branch
+        with:
+          ref: master
+      - name: Benchmark master phases
+        run: ./gradlew run -q --args="--Xbenchmark-phases" | sort | > master-phases.csv
+      - name: Benchmark master throughput
+        run: ./gradlew run -q --args="--Xbenchmark-throughput" > master-throughput.csv
+      - name: Create phase report
+        run: echo "phase|master|feature" > phase-report.txt; join -t , master-phases.csv feature-phases.csv | cut -d , -f 1,3,5 | tr , '|' >> phase-report.txt;
+      - name: Create throughput report
+        run: echo "Throughput" > throughput-report.txt; echo "master|feature" >> throughput-report.txt; paste -d , master-throughput.csv feature-throughput.csv | cut -d , -f 2,4 | tr , '|' >> throughput-report.txt
+      - name: Comment phase report
+        run: > 
+          curl -X POST -H "Accept: application/vnd.github.v3+json" ${{ github.event.issue_url }}/comments -d '{"body":"$(cat phase-report.txt)"}'
+      - name: Comment throughput report
+        run: > 
+          curl -X POST -H "Accept: application/vnd.github.v3+json" ${{ github.event.issue_url }}/comments -d '{"body":"$(cat thoughput-report.txt)"}'
         
