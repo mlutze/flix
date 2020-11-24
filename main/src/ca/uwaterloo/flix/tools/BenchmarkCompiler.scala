@@ -12,12 +12,12 @@ object BenchmarkCompiler {
   /**
     * The number of compilations to perform before the statistics are collected.
     */
-  val WarmupIterations = 25
+  val WarmupIterations = 1
 
   /**
     * The number of compilations to perform when collecting statistics.
     */
-  val BenchmarkIterations = 10
+  val BenchmarkIterations = 1
 
   /**
     * Outputs statistics about time spent in each compiler phase.
