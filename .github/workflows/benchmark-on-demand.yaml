@@ -37,14 +37,13 @@ jobs:
         with:
           ref: master
       - name: Download feature phases results
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2
         with:
           name: feature-phases
       - name: Download feature throughput results
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2
         with:
           name: feature-throughput
-          path: feature-throughput.csv
       - name: Benchmark master phases
         run: ./gradlew run -q --args="--Xbenchmark-phases" | sort > master-phases.csv
       - name: Benchmark master throughput
