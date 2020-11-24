@@ -54,8 +54,8 @@ jobs:
         run: echo "Throughput" > throughput-report.txt; echo "master|feature" >> throughput-report.txt; paste -d , master-throughput.csv feature-throughput.csv | cut -d , -f 2,4 | tr , '|' >> throughput-report.txt
       - name: Comment phase report
         run: > 
-          curl -X POST -H "Accept: application/vnd.github.v3+json" -H "authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" ${{ github.event.issue.comments_url }} -d "{\"body\":\"`cat phase-report.txt`\"}"
+          curl -X POST -H "Accept: application/vnd.github.v3+json" -H "authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" ${{ github.event.issue.comments_url }} -d "{\"body\":`cat phase-report.txt | jq -Rs .`}"
       - name: Comment throughput report
         run: > 
-          curl -X POST -H "Accept: application/vnd.github.v3+json" -H "authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" ${{ github.event.issue.comments_url }} -d "{\"body\":\"`cat thoughput-report.txt`\"}"
+          curl -X POST -H "Accept: application/vnd.github.v3+json" -H "authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" ${{ github.event.issue.comments_url }} -d "{\"body\":`cat throughput-report.txt | jq -Rs .`}"
         
