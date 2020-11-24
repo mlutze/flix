@@ -19,15 +19,34 @@ jobs:
       - uses: actions/checkout@v2
         name: Check out feature branch
       - name: Benchmark feature phases
-        run: ./gradlew run -q --args="--Xbenchmark-phases" | sort | > feature-phases.csv
+        run: ./gradlew run -q --args="--Xbenchmark-phases" | sort > feature-phases.csv
       - name: Benchmark feature throughput
         run: ./gradlew run -q --args="--Xbenchmark-throughput" > feature-throughput.csv
+      - name: Upload feature phases results
+        uses: actions/upload-artifact@v1
+        with:
+          name: feature-phases
+          path: feature-phases.csv
+      - name: Upload feature throughput results
+        uses: actions/upload-artifact@v1
+        with:
+          name: feature-throughput
+          path: feature-throughput.csv
       - uses: actions/checkout@v2
         name: Check out master branch
         with:
           ref: master
+      - name: Download feature phases results
+        uses: actions/download-artifact@v1
+        with:
+          name: feature-phases
+      - name: Download feature throughput results
+        uses: actions/upload-artifact@v1
+        with:
+          name: feature-throughput
+          path: feature-throughput.csv
       - name: Benchmark master phases
-        run: ./gradlew run -q --args="--Xbenchmark-phases" | sort | > master-phases.csv
+        run: ./gradlew run -q --args="--Xbenchmark-phases" | sort > master-phases.csv
       - name: Benchmark master throughput
         run: ./gradlew run -q --args="--Xbenchmark-throughput" > master-throughput.csv
       - name: Create phase report
