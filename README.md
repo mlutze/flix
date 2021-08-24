@@ -1,3 +1,6 @@
+BLAHBLAHBLAH
+
+
 <p align="center" >
     <img src="https://raw.githubusercontent.com/flix/flix/master/docs/logo.png" height="91px" 
     alt="The Flix Programming Language" 
