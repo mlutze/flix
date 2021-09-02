@@ -26,17 +26,17 @@ import org.objectweb.asm.Opcodes._
 import org.objectweb.asm._
 
 /**
-  * Generate expression
-  */
+ * Generate expression
+ */
 object GenExpression {
 
   /**
-    * Emits code for the given expression `exp0` to the given method `visitor` in the `currentClass`.
-    */
+   * Emits code for the given expression `exp0` to the given method `visitor` in the `currentClass`.
+   */
   def compileExpression(exp0: Expression, visitor: MethodVisitor, currentClass: JvmType.Reference, lenv0: Map[Symbol.LabelSym, Label], entryPoint: Label)(implicit root: Root, flix: Flix): Unit = exp0 match {
     case Expression.Unit(loc) =>
       addSourceLine(visitor, loc)
-      visitor.visitFieldInsn(GETSTATIC, JvmName.Unit.toInternalName, GenUnitClass.instanceFieldName, JvmName.Unit.toDescriptor)
+      visitor.visitFieldInsn(GETSTATIC, JvmName.Unit.toInternalName, GenUnitClass.InstanceFieldName, JvmName.Unit.toDescriptor)
 
     case Expression.Null(tpe, loc) =>
       addSourceLine(visitor, loc)
@@ -445,7 +445,7 @@ object GenExpression {
         visitor.visitTypeInsn(NEW, classType.name.toInternalName)
         visitor.visitInsn(DUP)
         if (JvmOps.isUnitTag(tagInfo)) {
-          visitor.visitFieldInsn(GETSTATIC, JvmName.Unit.toInternalName, GenUnitClass.instanceFieldName, JvmName.Unit.toDescriptor)
+          visitor.visitFieldInsn(GETSTATIC, JvmName.Unit.toInternalName, GenUnitClass.InstanceFieldName, JvmName.Unit.toDescriptor)
         } else {
           // Evaluating the single argument of the class constructor
           compileExpression(exp, visitor, currentClass, lenv0, entryPoint)
@@ -691,7 +691,7 @@ object GenExpression {
       // with the store instruction corresponding to the stored element
       visitor.visitInsn(AsmOps.getArrayStoreInstruction(jvmType))
       // Since the return type is 'unit', we put an instance of 'unit' on top of the stack
-      visitor.visitFieldInsn(GETSTATIC, JvmName.Unit.toInternalName, GenUnitClass.instanceFieldName, JvmName.Unit.toDescriptor)
+      visitor.visitFieldInsn(GETSTATIC, JvmName.Unit.toInternalName, GenUnitClass.InstanceFieldName, JvmName.Unit.toDescriptor)
 
     case Expression.ArrayLength(base, tpe, loc) =>
       // Adding source line number for debugging
@@ -791,17 +791,17 @@ object GenExpression {
       // Invoke `setValue` method to set the value to the given number
       visitor.visitMethodInsn(INVOKEVIRTUAL, classType.name.toInternalName, "setValue", methodDescriptor, false)
       // Since the return type is unit, we put an instance of unit on top of the stack
-      visitor.visitFieldInsn(GETSTATIC, JvmName.Unit.toInternalName, GenUnitClass.instanceFieldName, JvmName.Unit.toDescriptor)
+      visitor.visitFieldInsn(GETSTATIC, JvmName.Unit.toInternalName, GenUnitClass.InstanceFieldName, JvmName.Unit.toDescriptor)
 
     case Expression.Existential(params, exp, loc) =>
       // TODO: Better exception.
       addSourceLine(visitor, loc)
-      AsmOps.compileThrowFlixError(visitor, JvmName.Runtime.NotImplementedError, loc)
+      AsmOps.compileThrowFlixError(visitor, JvmName.NotImplementedError, loc)
 
     case Expression.Universal(params, exp, loc) =>
       // TODO: Better exception.
       addSourceLine(visitor, loc)
-      AsmOps.compileThrowFlixError(visitor, JvmName.Runtime.NotImplementedError, loc)
+      AsmOps.compileThrowFlixError(visitor, JvmName.NotImplementedError, loc)
 
     case Expression.Cast(exp, tpe, loc) =>
       addSourceLine(visitor, loc)
@@ -929,7 +929,8 @@ object GenExpression {
 
       // If the method is void, put a unit on top of the stack
       if (asm.Type.getType(method.getReturnType) == asm.Type.VOID_TYPE) {
-        visitor.visitFieldInsn(GETSTATIC, JvmName.Unit.toInternalName, GenUnitClass.instanceFieldName, JvmName.Unit.toDescriptor)      }
+        visitor.visitFieldInsn(GETSTATIC, JvmName.Unit.toInternalName, GenUnitClass.InstanceFieldName, JvmName.Unit.toDescriptor)
+      }
 
     case Expression.InvokeStaticMethod(method, args, tpe, loc) =>
       addSourceLine(visitor, loc)
@@ -957,7 +958,7 @@ object GenExpression {
       val descriptor = asm.Type.getMethodDescriptor(method)
       visitor.visitMethodInsn(INVOKESTATIC, declaration, name, descriptor, false)
       if (asm.Type.getType(method.getReturnType) == asm.Type.VOID_TYPE) {
-        visitor.visitFieldInsn(GETSTATIC, JvmName.Unit.toInternalName, GenUnitClass.instanceFieldName, JvmName.Unit.toDescriptor)
+        visitor.visitFieldInsn(GETSTATIC, JvmName.Unit.toInternalName, GenUnitClass.InstanceFieldName, JvmName.Unit.toDescriptor)
       }
 
     case Expression.GetField(field, exp, tpe, loc) =>
@@ -974,7 +975,7 @@ object GenExpression {
       visitor.visitFieldInsn(PUTFIELD, declaration, field.getName, JvmOps.getJvmType(exp2.tpe).toDescriptor)
 
       // Push Unit on the stack.
-      visitor.visitFieldInsn(GETSTATIC, JvmName.Unit.toInternalName, GenUnitClass.instanceFieldName, JvmName.Unit.toDescriptor)
+      visitor.visitFieldInsn(GETSTATIC, JvmName.Unit.toInternalName, GenUnitClass.InstanceFieldName, JvmName.Unit.toDescriptor)
 
     case Expression.GetStaticField(field, tpe, loc) =>
       addSourceLine(visitor, loc)
@@ -988,7 +989,7 @@ object GenExpression {
       visitor.visitFieldInsn(PUTSTATIC, declaration, field.getName, JvmOps.getJvmType(exp.tpe).toDescriptor)
 
       // Push Unit on the stack.
-      visitor.visitFieldInsn(GETSTATIC, JvmName.Unit.toInternalName, GenUnitClass.instanceFieldName, JvmName.Unit.toDescriptor)
+      visitor.visitFieldInsn(GETSTATIC, JvmName.Unit.toInternalName, GenUnitClass.InstanceFieldName, JvmName.Unit.toDescriptor)
 
     case Expression.NewChannel(exp, tpe, loc) =>
       addSourceLine(visitor, loc)
@@ -1105,15 +1106,19 @@ object GenExpression {
       // Jump here if the correct rule has been evaluated
       visitor.visitLabel(completedLabel)
 
-    case Expression.Spawn(exp, tpe, loc) =>
+    case Expression.Spawn(exp, _, loc) =>
       addSourceLine(visitor, loc)
       // Compile the expression, putting a function implementing the Spawnable interface on the stack
       compileExpression(exp, visitor, currentClass, lenv0, entryPoint)
-      // Call spawn method from Channel class
-      visitor.visitMethodInsn(INVOKESTATIC, JvmName.Channel.toInternalName, "spawn",
-        AsmOps.getMethodDescriptor(List(JvmType.Spawnable), JvmType.Void), false)
+      // make a thread and run it
+      visitor.visitTypeInsn(NEW, "java/lang/Thread")
+      visitor.visitInsn(DUP_X1)
+      visitor.visitInsn(SWAP)
+      visitor.visitMethodInsn(INVOKESPECIAL, "java/lang/Thread", "<init>", s"(${JvmName.Runnable.toDescriptor})${JvmType.Void.toDescriptor}", false)
+      visitor.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Thread", "start", AsmOps.getMethodDescriptor(Nil, JvmType.Void), false)
       // Put a Unit value on the stack
-      visitor.visitFieldInsn(GETSTATIC, JvmName.Unit.toInternalName, GenUnitClass.instanceFieldName, JvmName.Unit.toDescriptor)
+      visitor.visitFieldInsn(GETSTATIC, JvmName.Unit.toInternalName, GenUnitClass.InstanceFieldName, JvmName.Unit.toDescriptor)
+
     case Expression.Lazy(exp, tpe, loc) =>
       // Add source line numbers for debugging.
       addSourceLine(visitor, loc)
@@ -1158,7 +1163,7 @@ object GenExpression {
 
     case Expression.MatchError(_, loc) =>
       addSourceLine(visitor, loc)
-      AsmOps.compileThrowFlixError(visitor, JvmName.Runtime.MatchError, loc)
+      AsmOps.compileThrowFlixError(visitor, JvmName.MatchError, loc)
   }
 
   /*
@@ -1603,8 +1608,8 @@ object GenExpression {
   }
 
   /**
-    * Generates code to read the given variable symbol and put it on top of the stack.
-    */
+   * Generates code to read the given variable symbol and put it on top of the stack.
+   */
   private def readVar(sym: Symbol.VarSym, tpe: MonoType, mv: MethodVisitor)(implicit root: Root, flix: Flix): Unit = {
     val jvmType = JvmOps.getErasedJvmType(tpe)
     val iLOAD = AsmOps.getLoadInstruction(jvmType)
