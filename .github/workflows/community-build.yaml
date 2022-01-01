@@ -1,3 +1,5 @@
+on: pull-request
+
 jobs:
   community-build:
   
