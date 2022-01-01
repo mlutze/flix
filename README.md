@@ -4,7 +4,7 @@
     title="The Flix Programming Language">
 </p>
 
-laidfgalrigusldfig
+laidfgalrigusldfiglaireugaldskf
 
 **Flix** is a statically typed functional, imperative, and logic programming language.
 
