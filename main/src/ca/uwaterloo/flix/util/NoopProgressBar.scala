@@ -15,19 +15,11 @@
  */
 package ca.uwaterloo.flix.util
 
-trait ProgressBar {
+/**
+  * Progress bar that does nothing. Used when the output is not attached to a console.
+  */
+object NoopProgressBar extends ProgressBar {
+  override def observe(phase: String, msg: String, sample: Boolean): Unit = ()
 
-  /**
-    * Updates the progress with the given message `msg` in the given `phase`.
-    *
-    * If sample is `true` then
-    */
-  def observe(phase: String, msg: String, sample: Boolean): Unit
-
-  /**
-    * Indicates that no further events will be observed.
-    *
-    * Used to properly reset the current line.
-    */
-  def complete(): Unit
+  override def complete(): Unit = ()
 }

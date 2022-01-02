@@ -234,7 +234,7 @@ class Flix {
   /**
     * The progress bar.
     */
-  val progressBar: ProgressBar = new ProgressBar
+  val progressBar: ProgressBar = if (System.console() == null) NoopProgressBar else SpinnerProgressBar
 
   /**
     * The default assumed charset.
