@@ -8,7 +8,7 @@ jobs:
     env:
       # === ADD PROJECTS HERE === #
       #   (space-separated list)  #
-      PROJECTS: ""
+      PROJECTS: mlutze/flix-json mlutze/flix-json
 
       PROJ_DIR: project-build
 
