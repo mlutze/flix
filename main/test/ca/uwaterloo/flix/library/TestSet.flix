@@ -408,7 +408,7 @@ def foldRight04(): Bool = Set.foldRight((e, i) -> (i - e)*(e rem 2 + 1), 100, Se
 // reduceLeft                                                              //
 /////////////////////////////////////////////////////////////////////////////
 @test
-def reduceLeft01(): Bool = Set.reduceLeft((a, b) -> a-b, Set#{}: Set[Int]) == None
+def reduceLeft01(): Bool = Set.reduceLeft((a, b) -> a-b, Set#{}: Set[Int32]) == None
 
 @test
 def reduceLeft02(): Bool = Set.reduceLeft((a, b) -> a-b, Set#{1}) == Some(1)
@@ -426,7 +426,7 @@ def reduceLeft05(): Bool = Set.reduceLeft((a, b) -> a-b, Set#{4, 3, 2, 1}) == So
 // reduceRight                                                             //
 /////////////////////////////////////////////////////////////////////////////
 @test
-def reduceRight01(): Bool = Set.reduceRight((a, b) -> a-b, Set#{}: Set[Int]) == None
+def reduceRight01(): Bool = Set.reduceRight((a, b) -> a-b, Set#{}: Set[Int32]) == None
 
 @test
 def reduceRight02(): Bool = Set.reduceRight((a, b) -> a-b, Set#{1}) == Some(1)
@@ -463,6 +463,15 @@ def count06(): Bool = Set.count(i -> i > 3, Set#{1, 8}) == 1
 
 @test
 def count07(): Bool = Set.count(i -> i > 3, Set#{7, 6}) == 2
+
+@test
+def count08(): Bool & Impure =
+    let range = List.range(0, 2000);
+    let s = range |> List.toSet;
+    let a = MutList.new();
+    Set.count(x -> { let b = MutList.new(); MutList.push!(x, b); MutList.append!(a, b); true }, s);
+    MutList.toList(a) == range
+
 
 /////////////////////////////////////////////////////////////////////////////
 // flatten                                                                 //
@@ -809,6 +818,15 @@ def map14(): Bool = Set.map(x -> x rem 9, Set#{0, 5, 1, -9, -8}) == Set#{5, 1, 0
 @test
 def map15(): Bool = Set.map(x -> x rem 9, Set#{0, 5, 1, 10, 7, 19, 28, 2}) == Set#{0, 5, 7, 1, 2}
 
+@test
+def map16(): Bool & Impure =
+    let range = List.range(0, 2000);
+    let s = List.toSet(range);
+    let a = MutList.new();
+    Set.map(x -> { let b = MutList.new(); MutList.push!(x, b); MutList.append!(a, b); x }, s);
+    MutList.toList(a) == range
+
+
 /////////////////////////////////////////////////////////////////////////////
 // flatMap                                                                 //
 /////////////////////////////////////////////////////////////////////////////
@@ -923,7 +941,7 @@ def toList04(): Bool = Set.toList(Set#{1, 2, 3}) == 3 :: 2 :: 1 :: Nil
 
 @test
 def toChain01(): Bool =
-    Set.toChain(Set#{}: Set[Int]) == Chain.empty(): Chain[Int]
+    Set.toChain(Set#{}: Set[Int32]) == Chain.empty(): Chain[Int32]
 
 @test
 def toChain02(): Bool =
@@ -954,6 +972,27 @@ def toMap04(): Bool = Set.toMap(Set#{(1, true), (1, false)}) == Map#{1 => false}
 
 @test
 def toMap05(): Bool = Set.toMap(Set#{(1, true), (2, false), (3, true)}) == Map#{1 => true, 2 => false, 3 => true}
+
+
+/////////////////////////////////////////////////////////////////////////////
+// toMapWith                                                               //
+/////////////////////////////////////////////////////////////////////////////
+
+@test
+def toMapWith02(): Bool =
+    Set.toMapWith(x -> 0 * x, Set#{}) == Map#{}
+
+@test
+def toMapWith03(): Bool =
+    Set.toMapWith(x -> 2 * x, Set#{1, 3, 6}) == Map#{1 => 2, 3 => 6, 6 => 12}
+
+@test
+def toMapWith04(): Bool =
+    Set.toMapWith(x -> x + 10, Set#{1, 3, 6}) == Map#{1 => 11, 3 => 13, 6 => 16}
+
+@test
+def toMapWith05(): Bool =
+    Set.toMapWith(x -> x + 10, Set#{7, 1, 3, 6}) == Map#{1 => 11, 3 => 13, 6 => 16, 7 => 17}
 
 /////////////////////////////////////////////////////////////////////////////
 // eq                                                                      //
@@ -1215,6 +1254,14 @@ def unfoldWithIter06(): Bool & Impure =
 
     @test
     def minimumBy04(): Bool = Set.minimumBy((x, y) -> x <=> y, Set.range(5, 55)) == Some(5)
+
+    @test
+    def minimumBy05(): Bool & Impure =
+        let s = List.range(0, 2000) |> List.toSet;
+        let a = MutList.new();
+        Set.minimumBy((x, y) -> { let b = MutList.new(); MutList.push!(y, b); MutList.append!(a, b); x <=> y }, s);
+        MutList.toList(a) == List.range(1, 2000) // The first / left most value is ignored
+
 
     /////////////////////////////////////////////////////////////////////////////
     // maximum                                                                 //

@@ -79,6 +79,52 @@ namespace Console {
         ()
 
     ///
+    /// Returns `s` formatted as bold.
+    ///
+    pub def bold(s: a): String with ToString[a] =
+        let esc = escape();
+        match colorSupport() {
+            case ColorSupport.None      => ToString.toString(s)
+            case ColorSupport.Ansi      =>
+                esc + "[1m" + ToString.toString(s) + esc + "[0m"
+            case ColorSupport.TrueColor =>
+                esc + "[38;2;1m" + ToString.toString(s) + esc + "[0m"
+        }
+
+    ///
+    /// Returns `s` formatted with color `hexCode`
+    /// or if there's an error, returns the original string.
+    /// Expected format of `hexCode`: "#" + "--" + "--" + "--"
+    /// where each -- is a hex number between 00 and FF.
+    ///
+    pub def hex(hexCode: String, s: a): String with ToString[a] =
+        let text = ToString.toString(s);
+        let hexOpt: Option[String] = {
+            use Option.flatMap;
+            let* hex = String.stripPrefix(substr = "#", hexCode);
+            if (String.length(hex) == 6) {
+                let* r = String.sliceLeft(2, hex) |> stringToHex;
+                let* g = String.slice(2, 4, hex) |> stringToHex;
+                let* b = String.slice(4, 6, hex) |> stringToHex;
+                Some(rgb((r, g, b), text, isFg = true))
+            } else None as Option[String]
+        };
+        hexOpt |> Option.getWithDefault(text)
+
+    ///
+    /// Helper for `hex`.
+    /// Returns `hexNo` as a hex number.
+    ///
+    def stringToHex(hexNo: String): Option[Int32] & Pure =
+        import static java.lang.Integer.parseInt(String, Int32);
+        try {
+            Some(parseInt(hexNo, 16)) as & Pure
+        } catch {
+            case _: ##java.lang.NumberFormatException =>
+                None as Option[Int32]
+        }
+
+    ///
     /// Returns the string `s` formatted with the given RGB color `c`.
     ///
     pub def rgb(c: (Int32, Int32 , Int32), s: String, opts: {isFg :: Bool}): String =

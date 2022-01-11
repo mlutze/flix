@@ -2,9 +2,17 @@ on: [pull_request]
 
 jobs:
   community-build:
-  
+
+
     runs-on: ubuntu-latest
-  
+    continue-on-error: true
+    env:
+      # === ADD PROJECTS HERE === #
+      #   (space-separated list)  #
+      PROJECTS: mlutze/flix-json mlutze/flix-json
+
+      PROJ_DIR: project-build
+
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 1.11
@@ -13,5 +21,20 @@ jobs:
           java-version: 1.11
       - name: Build jar
         run: ./gradlew jar
-      - name: Build community project
-        run: mkdir tmp && cd tmp && java -jar ../build/libs/flix.jar init && java -jar ../build/libs/flix.jar install mlutze/flix-json && java.jar ../build/libs/flix.jar build
+
+      - name: Build community projects
+        run: |
+          # Sanity check: Make sure the project build directory does not exist.
+          test ! -e ${{ env.PROJ_DIR }}
+          
+          # Build each project in a fresh directory.
+          for project in ${{ env.PROJECTS }}; do
+            mkdir ${{ env.PROJ_DIR }}
+            cd ${{ env.PROJ_DIR }}
+            java -jar ../build/libs/flix.jar init
+            java -jar ../build/libs/flix.jar install $project
+            java -jar ../build/libs/flix.jar build
+            cd ..
+            rm -rf ${{ env.PROJ_DIR }}
+          done
+

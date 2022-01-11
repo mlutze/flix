@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Benjamin Dahse
+ * Copyright 2021 Magnus Madsen
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package ca.uwaterloo.flix.language.ast
 
-namespace Fixpoint/Ast {
-    pub enum VarSym with Eq, Order, ToString {
-        case VarSym(String)
-    }
+import ca.uwaterloo.flix.language.ast.Ast.Source
+
+trait Sourceable {
+
+  /**
+    * Returns the source of `this`.
+    */
+  def src: Source
+
 }

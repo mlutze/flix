@@ -39,25 +39,32 @@ object Weeder {
   /**
     * Weeds the whole program.
     */
-  def run(program: ParsedAst.Root)(implicit flix: Flix): Validation[WeededAst.Program, WeederError] = flix.phase("Weeder") {
-    val units = Validation.sequence(ParOps.parMap(program.units.values, visitCompilationUnit))
+  def run(root: ParsedAst.Root, oldRoot: WeededAst.Root, changeSet: ChangeSet)(implicit flix: Flix): Validation[WeededAst.Root, WeederError] =
+    flix.phase("Weeder") {
+      // Compute the stale and fresh sources.
+      val (stale, fresh) = changeSet.partition(root.units, oldRoot.units)
 
-    mapN(units) {
-      case rs => WeededAst.Program(rs, flix.getReachableRoots)
+      val results = ParOps.parMap(stale)(kv => visitCompilationUnit(kv._1, kv._2))
+      Validation.sequence(results) map {
+        case rs =>
+          val m = rs.foldLeft(fresh) {
+            case (acc, (k, v)) => acc + (k -> v)
+          }
+          WeededAst.Root(m, flix.getReachableRoots)
+      }
     }
-  }
 
   /**
     * Weeds the given abstract syntax tree.
     */
-  private def visitCompilationUnit(root: ParsedAst.CompilationUnit)(implicit flix: Flix): Validation[WeededAst.Root, WeederError] = {
-    val usesVal = traverse(root.uses)(visitUse)
-    val declarationsVal = traverse(root.decls)(visitDecl)
-    val loc = mkSL(root.sp1, root.sp2)
+  private def visitCompilationUnit(src: Ast.Source, unit: ParsedAst.CompilationUnit)(implicit flix: Flix): Validation[(Ast.Source, WeededAst.CompilationUnit), WeederError] = {
+    val usesVal = traverse(unit.uses)(visitUse)
+    val declarationsVal = traverse(unit.decls)(visitDecl)
+    val loc = mkSL(unit.sp1, unit.sp2)
 
     mapN(usesVal, declarationsVal) {
       case (uses, decls) =>
-        WeededAst.Root(uses.flatten, decls.flatten, loc)
+        src -> WeededAst.CompilationUnit(uses.flatten, decls.flatten, loc)
     }
   }
 
@@ -1926,17 +1933,6 @@ object Weeder {
     case ParsedAst.Predicate.Body.Guard(sp1, exp, sp2) =>
       mapN(visitExp(exp)) {
         case e => WeededAst.Predicate.Body.Guard(e, mkSL(sp1, sp2))
-      }
-
-    case ParsedAst.Predicate.Body.Filter(sp1, qname, terms, sp2) =>
-      val loc = mkSL(sp1, sp2)
-      traverse(terms)(visitArgument) map {
-        case ts =>
-          // Check if the argument list is empty. If so, invoke the function with the Unit value.
-          val as = if (ts.isEmpty) List(WeededAst.Expression.Unit(loc)) else ts
-          val b = WeededAst.Expression.DefOrSig(qname, loc)
-          val e = WeededAst.Expression.Apply(b, as, loc)
-          WeededAst.Predicate.Body.Guard(e, loc)
       }
 
     case ParsedAst.Predicate.Body.Loop(sp1, idents, exp, sp2) =>

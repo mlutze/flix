@@ -16,11 +16,29 @@
 
 use RedBlackTree.RedBlackTree;
 
-enum DelayMap[k, v] {
+pub enum DelayMap[k, v] {
     case DMap(RedBlackTree[k, Lazy[v]])
 }
 
 namespace DelayMap {
+
+    ///
+    /// Returns the number of threads to use for parallel evaluation.
+    ///
+    def threads(): Int32 =
+        // Note: We use a multiple of the number of physical cores for better performance.
+        let multiplier = 4;
+        multiplier * Environment.getVirtualProcessors()
+
+    ///
+    /// Determines whether to use parallel evaluation.
+    ///
+    /// By default we only enable parallel evaluation if the map has a certain size.
+    ///
+    def useParallelEvaluation(m: DelayMap[k, v]): Bool =
+        let DMap(t) = m;
+        let minSize = 2 ** RedBlackTree.blackHeight(t);
+        minSize >= 1024
 
     ///
     /// Returns the empty map.
@@ -96,43 +114,146 @@ namespace DelayMap {
     /// Returns `None` if `m` is empty.
     ///
     @Experimental
-    pub def minimum(m: DelayMap[k, v]): Option[(k, v)] =
+    pub def minimumKey(m: DelayMap[k, v]): Option[(k, v)] =
         let DMap(t) = m;
-        match RedBlackTree.minimum(t) {
+        match RedBlackTree.minimumKey(t) {
             case None       => None
-            case Some((k, v)) => Some((k, force v))
+            case Some(k, v) => Some(k, force v)
         }
 
     ///
-    /// Optionally finds `k -> v` where `k` is the smallest key according to the given comparator `cmp`.
+    /// Optionally finds `k => v` where `k` is the smallest key according to the given comparator `cmp`.
     ///
     /// Returns `None` if `m` is empty.
     ///
-    @Experimental
-    pub def minimumBy(cmp: (k, v, k, v) -> Comparison, m: DelayMap[k, v]): Option[(k, v)] =
-        reduceLeftWithKey((k1, v1, k2, v2) -> if (cmp(k1, v1, k2, v2) == LessThan) (k1, v1) else (k2, v2), m)
+    /// Purity polymorphic: Runs in parallel when given a pure function `cmp`.
+    ///
+    @ParallelWhenPure @Experimental
+    pub def minimumKeyBy(cmp: (k, k) -> Comparison & ef, m: DelayMap[k, v]): Option[(k, v)] & ef =
+        def min() = reduceLeftWithKey((kl, vl, kr, vr) -> if (cmp(kl, kr) == LessThan) (kl, vl) else (kr, vr), m);
+        let f = r -> cmp(r.kl, r.kr);
+        reifyEff(f) {
+            case Pure(g) =>
+                if (useParallelEvaluation(m))
+                    let h = (kl, _, kr, _) -> g({kl = kl, kr = kr});
+                    let DMap(t) = m;
+                    let res = RedBlackTree.parMinimumBy(threads() - 1, h, t) as & Pure;
+                    match res {
+                        case None       => None
+                        case Some(k, v) => Some(k, force v)
+                    }
+                else
+                    min()
+            case _ => min()
+        }
+    ///
+    /// Optionally finds `k => v` where `v` is the smallest value.
+    ///
+    /// Returns `None` if `m` is empty.
+    ///
+    @Parallel @Experimental
+    pub def minimumValue(m: DelayMap[k, v]): Option[(k, v)] with Order[v] =
+        minimumValueBy((x, y) -> x <=> y, m)
 
     ///
-    /// Optionally finds `k -> v` where `k` is the largest key according to the `Order` instance of `k`.
+    /// Optionally finds `k => v` where `k` is the smallest value according to the given comparator `cmp`.
+    ///
+    /// Returns `None` if `m` is empty.
+    ///
+    /// Purity polymorphic: Runs in parallel when given a pure function `cmp`.
+    ///
+    @ParallelWhenPure @Experimental
+    pub def minimumValueBy(cmp: (v, v) -> Comparison & ef, m: DelayMap[k, v]): Option[(k, v)] & ef =
+        def min() = reduceLeftWithKey((kl, vl, kr, vr) -> if (cmp(vl, vr) == LessThan) (kl, vl) else (kr, vr), m);
+        let f = r -> cmp(r.vl, r.vr);
+        reifyEff(f) {
+            case Pure(g) =>
+                if (useParallelEvaluation(m))
+                    let h = (_, vl, _, vr) -> g({vl = force vl, vr = force vr});
+                    let DMap(t) = m;
+                    let res = RedBlackTree.parMinimumBy(threads() - 1, h, t) as & Pure;
+                    match res {
+                        case None       => None
+                        case Some(k, v) => Some(k, force v)
+                    }
+                else
+                    min()
+            case _ => min()
+        }
+
+    ///
+    /// Optionally finds `k => v` where `k` is the largest key according to the `Order` instance of `k`.
     ///
     /// Returns `None` if `m` is empty.
     ///
     @Experimental
-    pub def maximum(m: DelayMap[k, v]): Option[(k, v)] =
+    pub def maximumKey(m: DelayMap[k, v]): Option[(k, v)] =
         let DMap(t) = m;
-        match RedBlackTree.maximum(t) {
-            case None => None
-            case Some((k, v)) => Some((k, force v))
+        match RedBlackTree.maximumKey(t) {
+            case None       => None
+            case Some(k, v) => Some(k, force v)
         }
 
     ///
-    /// Optionally finds `k -> v` where `k` is the largest key according to the given comparator `cmp`.
+    /// Optionally finds `k => v` where `k` is the largest key according to the given comparator `cmp`.
     ///
     /// Returns `None` if `m` is empty.
     ///
-    @Experimental
-    pub def maximumBy(cmp: (k, v, k, v) -> Comparison, m: DelayMap[k, v]): Option[(k, v)] =
-        reduceLeftWithKey((k1, v1, k2, v2) -> if (cmp(k1, v1, k2, v2) == GreaterThan) (k1, v1) else (k2, v2), m)
+    /// Purity polymorphic: Runs in parallel when given a pure function `cmp`.
+    ///
+    @ParallelWhenPure @Experimental
+    pub def maximumKeyBy(cmp: (k, k) -> Comparison & ef, m: DelayMap[k, v]): Option[(k, v)] & ef =
+        def max() = reduceLeftWithKey((kl, vl, kr, vr) -> if (cmp(kl, kr) == GreaterThan) (kl, vl) else (kr, vr), m);
+        let f = r -> cmp(r.kl, r.kr);
+        reifyEff(f) {
+            case Pure(g) =>
+                if (useParallelEvaluation(m))
+                    let h = (kl, _, kr, _) -> g({kl = kl, kr = kr});
+                    let DMap(t) = m;
+                    let res = RedBlackTree.parMaximumBy(threads() - 1, h, t) as & Pure;
+                    match res {
+                        case None       => None
+                        case Some(k, v) => Some(k, force v)
+                    }
+                else
+                    max()
+            case _ => max()
+        }
+
+    ///
+    /// Optionally finds `k => v` where `v` is the largest value.
+    ///
+    /// Returns `None` if `m` is empty.
+    ///
+    @Parallel @Experimental
+    pub def maximumValue(m: DelayMap[k, v]): Option[(k, v)] with Order[v] =
+        maximumValueBy((x, y) -> x <=> y, m)
+
+    ///
+    /// Optionally finds `k => v` where `k` is the largest value according to the given comparator `cmp`.
+    ///
+    /// Returns `None` if `m` is empty.
+    ///
+    /// Purity polymorphic: Runs in parallel when given a pure function `cmp`.
+    ///
+    @ParallelWhenPure @Experimental
+    pub def maximumValueBy(cmp: (v, v) -> Comparison & ef, m: DelayMap[k, v]): Option[(k, v)] & ef =
+        def max() = reduceLeftWithKey((kl, vl, kr, vr) -> if (cmp(vl, vr) == GreaterThan) (kl, vl) else (kr, vr), m);
+        let f = r -> cmp(r.vl, r.vr);
+        reifyEff(f) {
+            case Pure(g) =>
+                if (useParallelEvaluation(m))
+                    let h = (_, vl, _, vr) -> g({vl = force vl, vr = force vr});
+                    let DMap(t) = m;
+                    let res = RedBlackTree.parMaximumBy(threads() - 1, h, t) as & Pure;
+                    match res {
+                        case None       => None
+                        case Some(k, v) => Some(k, force v)
+                    }
+                else
+                    max()
+            case _ => max()
+        }
 
     ///
     /// Returns the keys of `m`.
@@ -208,7 +329,7 @@ namespace DelayMap {
     ///
     /// Returns a map with mappings `k -> f(k, v)` for every `k -> v` in `m`.
     ///
-    @Experimental @LazyWhenPure
+    @Experimental @LazyWhenPure @ParallelWhenPure
     pub def mapWithKey(f: (k, v1) -> v2 & ef, m: DelayMap[k, v1]): DelayMap[k, v2] & ef =
         let f1 = (args) -> f(fst(args), snd(args));
         reifyEff(f1) {
@@ -219,22 +340,22 @@ namespace DelayMap {
     ///
     /// Helper function for `mapWithKey`. Applies `f` lazily.
     ///
-    @Lazy
+    @Lazy @ParallelWhenPure
     def mapWithKeyL(f: (k, v1) -> v2, m: DelayMap[k, v1]): DelayMap[k, v2] =
-        let DMap(tree) = m;
-        let f1 = (k, v) -> lazy f(k, force v);
-        DMap(RedBlackTree.mapWithKey(f1, tree))
+        let DMap(t) = m;
+        let g = (k, v) -> lazy f(k, force v);
+        DMap(RedBlackTree.mapWithKey(g, t))
 
     ///
     /// Helper function for `mapWithKey`. Applies `f` eagerly.
     ///
     def mapWithKeyE(f: (k, v1) -> v2 & ef, m: DelayMap[k, v1]): DelayMap[k, v2] & ef =
-        let DMap(tree) = m;
-        let f1 = (k, v) -> {
+        let DMap(t) = m;
+        let g = (k, v) -> {
                 let x1 = f(k, force v);
                 lazy x1
             };
-        DMap(RedBlackTree.mapWithKey(f1, tree))
+        DMap(RedBlackTree.mapWithKey(g, t))
 
     ///
     /// Returns a map of all mappings `k -> v` in `m` where `v` satisfies the predicate `f`.
@@ -416,7 +537,7 @@ namespace DelayMap {
     ///
     /// Returns `m` as a Map, i.e. every value is forced.
     ///
-    @Experimental
+    @Experimental @Parallel
     pub def toMap(m: DelayMap[k, v]): Map[k, v] =
         let DMap(t) = m;
         Map(RedBlackTree.mapWithKey((_, v) -> force v, t))
@@ -489,9 +610,7 @@ namespace DelayMap {
     ///
     @Experimental
     pub def toMutMap(m: DelayMap[k, v]): MutMap[k, v] & Impure =
-        let DMap(t) = m;
-        let t1 = t |> RedBlackTree.mapWithKey((_, v) -> force v);
-        MutMap(ref Map(t1))
+        MutMap(ref toMap(m))
 
     ///
     /// Returns the map `m` as a set of key-value pairs.

@@ -52,36 +52,83 @@ namespace MutMap {
     ///
     /// Returns `None` if `m` is empty.
     ///
-    pub def minimum(m: MutMap[k, v]): Option[(k, v)] & Impure =
+    pub def minimumKey(m: MutMap[k, v]): Option[(k, v)] & Impure =
         let MutMap(mm) = m;
-        Map.minimum(deref mm)
+        Map.minimumKey(deref mm)
 
     ///
-    /// Optionally finds `k -> v` where `k` is the smallest key according to the given comparator `cmp`.
+    /// Optionally finds `k => v` where `k` is the smallest key according to the given comparator `cmp`.
     ///
     /// Returns `None` if `m` is empty.
     ///
-    pub def minimumBy(cmp: (k, v, k, v) -> Comparison, m: MutMap[k, v]): Option[(k, v)] & Impure =
+    /// Purity polymorphic: Runs in parallel when given a pure function `cmp`.
+    ///
+    @ParallelWhenPure
+    pub def minimumKeyBy(cmp: (k, k) -> Comparison & ef, m: MutMap[k, v]): Option[(k, v)] & Impure =
         let MutMap(mm) = m;
-        Map.minimumBy(cmp, deref mm)
+        Map.minimumKeyBy(cmp, deref mm)
 
     ///
-    /// Optionally finds `k -> v` where `k` is the largest key according to the `Order` instance of `k`.
+    /// Optionally finds `k => v` where `v` is the smallest value.
     ///
     /// Returns `None` if `m` is empty.
     ///
-    pub def maximum(m: MutMap[k, v]): Option[(k, v)] & Impure =
+    @Parallel
+    pub def minimumValue(m: MutMap[k, v]): Option[(k, v)] & Impure with Order[v] =
         let MutMap(mm) = m;
-        Map.maximum(deref mm)
+        Map.minimumValue(deref mm)
 
     ///
-    /// Optionally finds `k -> v` where `k` is the largest key according to the given comparator `cmp`.
+    /// Optionally finds `k => v` where `v` is the smallest value according to the given comparator `cmp`.
     ///
     /// Returns `None` if `m` is empty.
     ///
-    pub def maximumBy(cmp: (k, v, k, v) -> Comparison, m: MutMap[k, v]): Option[(k, v)] & Impure =
+    /// Purity polymorphic: Runs in parallel when given a pure function `cmp`.
+    ///
+    @ParallelWhenPure
+    pub def minimumValueBy(cmp: (v, v) -> Comparison & ef, m: MutMap[k, v]): Option[(k, v)] & Impure =
         let MutMap(mm) = m;
-        Map.maximumBy(cmp, deref mm)
+        Map.minimumValueBy(cmp, deref mm)
+
+    ///
+    /// Optionally finds `k => v` where `k` is the largest key according to the `Order` instance of `k`.
+    ///
+    /// Returns `None` if `m` is empty.
+    ///
+    pub def maximumKey(m: MutMap[k, v]): Option[(k, v)] & Impure =
+        let MutMap(mm) = m;
+        Map.maximumKey(deref mm)
+
+    ///
+    /// Optionally finds `k => v` where `k` is the largest key according to the given comparator `cmp`.
+    ///
+    /// Returns `None` if `m` is empty.
+    ///
+    pub def maximumKeyBy(cmp: (k, k) -> Comparison & ef, m: MutMap[k, v]): Option[(k, v)] & Impure =
+        let MutMap(mm) = m;
+        Map.maximumKeyBy(cmp, deref mm)
+
+    ///
+    /// Optionally finds `k => v` where `v` is the largest value.
+    ///
+    /// Returns `None` if `m` is empty.
+    ///
+    @Parallel
+    pub def maximumValue(m: MutMap[k, v]): Option[(k, v)] & Impure with Order[v] =
+        let MutMap(mm) = m;
+        Map.maximumValue(deref mm)
+
+    ///
+    /// Optionally finds `k => v` where `v` is the largest value according to the given comparator `cmp`.
+    ///
+    /// Returns `None` if `m` is empty.
+    ///
+    /// Purity polymorphic: Runs in parallel when given a pure function `cmp`.
+    ///
+    @ParallelWhenPure
+    pub def maximumValueBy(cmp: (v, v) -> Comparison & ef, m: MutMap[k, v]): Option[(k, v)] & Impure =
+        let MutMap(mm) = m;
+        Map.maximumValueBy(cmp, deref mm)
 
     ///
     /// Returns the keys of the mutable map `m`.

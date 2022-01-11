@@ -21,7 +21,7 @@
 /// The constructor `None` represents an absent value,
 /// whereas the constructor `Some(v)` represents the value `v`.
 ///
-enum Option[t] with Eq, Order, ToString {
+pub enum Option[t] with Eq, Order, ToString {
     case None,
     case Some(t)
 }
@@ -365,6 +365,12 @@ namespace Option {
     }
 
     ///
+    /// Returns a map with elements of `s` as keys and `f` applied as values.
+    ///
+    pub def toMapWith(f: a -> b, s: Option[a]): Map[a, b] with Order[a] =
+            Option.foldRight((x, m) -> Map.insert(x, f(x), m), s, Map.empty())
+
+    ///
     /// Returns the Option value `Ok(v)` if `o` is `Some(v)`. Otherwise returns `Err(e)`.
     ///
     @Time(1) @Space(1)
@@ -516,4 +522,5 @@ namespace Option {
         case None    => Iterator.empty()
         case Some(x) => Iterator.singleton(x)
     }
+
 }
