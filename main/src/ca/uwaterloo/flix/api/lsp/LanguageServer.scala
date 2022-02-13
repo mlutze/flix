@@ -197,9 +197,13 @@ class LanguageServer(port: Int) extends WebSocketServer(new InetSocketAddress("l
     case Request.AddUri(id, uri, src) =>
       current = false
       sources += (uri -> src)
+      println(s"added uri $uri")
+      println(s"sources are now: $sources")
       ("id" -> id) ~ ("status" -> "success")
 
     case Request.RemUri(id, uri) =>
+      println(s"removed uri $uri")
+      println(s"sources are now: $sources")
       current = false
       sources -= uri
       ("id" -> id) ~ ("status" -> "success")
