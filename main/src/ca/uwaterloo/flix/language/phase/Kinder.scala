@@ -749,21 +749,31 @@ object Kinder {
     * Performs kinding on the given type variable under the given kind environment, with `expectedKind` expected from context.
     */
   private def visitTypeVar(tvar: Type.UnkindedVar, expectedKind: Kind, kenv: KindEnv): Validation[Type.KindedVar, KindError] = tvar match {
-    case tvar@Type.UnkindedVar(sym, loc) =>
-      kenv.map.get(tvar) match {
-        // Case 1: we don't know about this kind, just ascribe it with what the context expects
-        case None => tvar.ascribedWith(expectedKind).toSuccess
-        // Case 2: we know about this kind, make sure it's behaving as we expect
-        case Some(actualKind) =>
-          unify(expectedKind, actualKind) match {
-            case Some(kind) => Type.KindedVar(sym.ascribedWith(kind), loc).toSuccess
-            case None => KindError.UnexpectedKind(expectedKind = expectedKind, actualKind = actualKind, loc = loc).toFailure
-          }
+    case Type.UnkindedVar(sym0, loc) =>
+      mapN(visitTypeVarSym(sym0, expectedKind, kenv, loc)) {
+        sym => Type.KindedVar(sym, loc)
       }
   }
 
   /**
-    * Performs kinding on the given type under the given kind environment, with `expectedKind` expected from context.
+    * Performs kinding on the given type variable symbol under the given kind environment, with `expectedKind` expected from context.
+    */
+  private def visitTypeVarSym(sym: Symbol.UnkindedTypeVarSym, expectedKind: Kind, kenv: KindEnv, loc: SourceLocation): Validation[Symbol.KindedTypeVarSym, KindError] = {
+    kenv.map.get(sym) match {
+      // Case 1: we don't know about this kind, just ascribe it with what the context expects
+      case None => sym.ascribedWith(expectedKind).toSuccess
+      // Case 2: we know about this kind, make sure it's behaving as we expect
+      case Some(actualKind) =>
+        unify(expectedKind, actualKind) match {
+          case Some(kind) => sym.ascribedWith(kind).toSuccess
+          case None => KindError.UnexpectedKind(expectedKind = expectedKind, actualKind = actualKind, loc = loc).toFailure
+        }
+  }
+}
+
+
+/**
+  * Performs kinding on the given type under the given kind environment, with `expectedKind` expected from context.
     * This is roughly analogous to the reassembly of expressions under a type environment, except that:
     * - Kind errors may be discovered here as they may not have been found during inference (or inference may not have happened at all).
     */
@@ -812,7 +822,7 @@ object Kinder {
   private def visitScheme(sc: ResolvedAst.Scheme, kenv: KindEnv, taenv: Map[Symbol.TypeAliasSym, KindedAst.TypeAlias], root: ResolvedAst.Root)(implicit flix: Flix): Validation[Scheme, KindError] = sc match {
     case ResolvedAst.Scheme(quantifiers0, constraints0, base0) =>
       for {
-        quantifiers <- Validation.traverse(quantifiers0)(visitTypeVar(_, Kind.Wild, kenv))
+        quantifiers <- Validation.traverse(quantifiers0)(sym => visitTypeVarSym(sym, Kind.Wild, kenv, sym.loc))
         constraints <- Validation.traverse(constraints0)(visitTypeConstraint(_, kenv, taenv, root))
         base <- visitType(base0, Kind.Star, kenv, taenv, root)
       } yield Scheme(quantifiers, constraints, base)
@@ -1039,7 +1049,7 @@ object Kinder {
     case ResolvedAst.Enum(_, _, _, _, tparams, _, _, _, _, _) =>
       val kenv = getKindEnvFromTypeParamsDefaultStar(tparams)
       tparams.tparams.foldRight(Kind.Star: Kind) {
-        case (tparam, acc) => kenv.map(tparam.tpe) ->: acc
+        case (tparam, acc) => kenv.map(tparam.sym) ->: acc
       }
   }
 
@@ -1108,11 +1118,11 @@ object Kinder {
     case _ => None
   }
 
-  private case class KindEnv(map: Map[Type.UnkindedVar, Kind]) {
+  private case class KindEnv(map: Map[Symbol.UnkindedTypeVarSym, Kind]) {
     /**
       * Adds the given mapping to the kind environment.
       */
-    def +(pair: (Type.UnkindedVar, Kind)): Validation[KindEnv, KindError] = pair match {
+    def +(pair: (Symbol.UnkindedTypeVarSym, Kind)): Validation[KindEnv, KindError] = pair match {
       case (tvar, kind) => map.get(tvar) match {
         case Some(kind0) => unify(kind0, kind) match {
           case Some(minKind) => KindEnv(map + (tvar -> minKind)).toSuccess
