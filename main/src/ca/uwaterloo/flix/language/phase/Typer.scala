@@ -2243,7 +2243,7 @@ object Typer {
     val declaredTypes = params.map(_.tpe)
     (params zip declaredTypes).foldLeft(Substitution.empty) {
       case (macc, (KindedAst.FormalParam(sym, _, _, _), declaredType)) =>
-        macc ++ Substitution.singleton(sym.tvar.ascribedWith(Kind.Star), declaredType)
+        macc ++ Substitution.singleton(sym.tvar.sym.ascribedWith(Kind.Star), declaredType)
     }
   }
 
