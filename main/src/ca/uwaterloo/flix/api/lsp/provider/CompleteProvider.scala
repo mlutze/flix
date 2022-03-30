@@ -201,7 +201,7 @@ object CompleteProvider {
       * Formats the given type `tpe`.
       */
     def fmtType(clazz: TypedAst.Class, tpe: Type, hole: String): String =
-      FormatType.formatWellKindedType(replaceText(clazz.tparam.tpe, tpe, hole))
+      FormatType.formatWellKindedType(replaceText(clazz.tparam.sym, tpe, hole))
 
     /**
       * Formats the given formal parameters in `spec`.

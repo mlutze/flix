@@ -720,7 +720,7 @@ object Deriver {
     * Filters out non-star type parameters and wild type parameters.
     */
   private def getTypeConstraintsForTypeParams(tparams: List[KindedAst.TypeParam], clazz: Symbol.ClassSym, loc: SourceLocation): List[Ast.TypeConstraint] = tparams.collect {
-    case tparam if tparam.sym.kind == Kind.Star && !tparam.name.isWild => Ast.TypeConstraint(clazz, tparam.sym, loc)
+    case tparam if tparam.sym.kind == Kind.Star && !tparam.name.isWild => Ast.TypeConstraint(clazz, Type.KindedVar(tparam.sym, loc), loc)
   }
 
   /**
