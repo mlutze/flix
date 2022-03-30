@@ -98,7 +98,7 @@ object Typer {
   private def visitClass(clazz: KindedAst.Class, root: KindedAst.Root, classEnv: Map[Symbol.ClassSym, Ast.ClassContext])(implicit flix: Flix): Validation[(Symbol.ClassSym, TypedAst.Class), TypeError] = clazz match {
     case KindedAst.Class(doc, ann0, mod, sym, tparam, superClasses, sigs, laws0, loc) =>
       val tparams = getTypeParams(List(tparam))
-      val tconstr = Ast.TypeConstraint(sym, tparam.tpe, sym.loc)
+      val tconstr = Ast.TypeConstraint(sym, tparam.sym, sym.loc)
       for {
         ann <- visitAnnotations(ann0, root)
         sigs <- Validation.traverse(sigs.values)(visitSig(_, List(tconstr), root, classEnv))

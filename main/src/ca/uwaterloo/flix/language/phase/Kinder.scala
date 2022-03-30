@@ -803,7 +803,7 @@ object Kinder {
       taenv(cst.sym) match {
         case KindedAst.TypeAlias(_, _, _, tparams, tpe, _) =>
           val argsVal = traverse(tparams.zip(args0)) {
-            case (tparam, arg) => visitType(arg, tparam.tpe.kind, kenv, taenv, root)
+            case (tparam, arg) => visitType(arg, tparam.sym.kind, kenv, taenv, root)
           }
           val tpeVal = visitType(t0, tpe.kind, kenv, taenv, root)
           flatMapN(argsVal, tpeVal) {
@@ -857,11 +857,11 @@ object Kinder {
     */
   private def visitTypeParam(tparam: ResolvedAst.TypeParam, kenv: KindEnv): Validation[KindedAst.TypeParam, KindError] = tparam match {
     case ResolvedAst.TypeParam.Kinded(name, tpe0, _, loc) =>
-      mapN(visitTypeVar(tpe0, Kind.Wild, kenv)) {
+      mapN(visitTypeVarSym(tpe0, Kind.Wild, kenv, loc)) {
         tpe => KindedAst.TypeParam(name, tpe, loc)
       }
     case ResolvedAst.TypeParam.Unkinded(name, tpe0, loc) =>
-      mapN(visitTypeVar(tpe0, Kind.Wild, kenv)) {
+      mapN(visitTypeVarSym(tpe0, Kind.Wild, kenv, loc)) {
         tpe => KindedAst.TypeParam(name, tpe, loc)
       }
   }
@@ -946,7 +946,7 @@ object Kinder {
   private def inferType(tpe: Type, expectedKind: Kind, kenv0: KindEnv, taenv: Map[Symbol.TypeAliasSym, KindedAst.TypeAlias], root: ResolvedAst.Root)(implicit flix: Flix): Validation[KindEnv, KindError] = tpe.baseType match {
     // Case 1: the type constructor is a variable: all args are * and the constructor is * -> * -> * ... -> expectedType
     case tvar: Type.UnkindedVar =>
-      val kind = kenv0.map.get(tvar) match {
+      val kind = kenv0.map.get(tvar.sym) match {
         // Case 1.1: the type is not in the kenv: guess that it is Star -> Star -> ... -> ???.
         case None =>
           tpe.typeArguments.foldLeft(expectedKind) {
@@ -956,7 +956,7 @@ object Kinder {
         case Some(k) => k
       }
 
-      Validation.fold(tpe.typeArguments, KindEnv.singleton(tvar -> kind)) {
+      Validation.fold(tpe.typeArguments, KindEnv.singleton(tvar.sym -> kind)) {
         case (acc, targ) => flatMapN(inferType(targ, Kind.Star, kenv0, taenv, root)) {
           kenv => acc ++ kenv
         }
@@ -976,7 +976,7 @@ object Kinder {
 
     case Type.Alias(cst, args, tpe, loc) =>
       val alias = taenv(cst.sym)
-      val tparamKinds = alias.tparams.map(_.tpe.kind)
+      val tparamKinds = alias.tparams.map(_.sym.kind)
 
       Validation.fold(args.zip(tparamKinds), KindEnv.empty) {
         case (acc, (targ, kind)) => flatMapN(inferType(targ, kind, kenv0, taenv, root)) {
@@ -1022,7 +1022,7 @@ object Kinder {
   private def getKindEnvFromKindedTypeParams(tparams0: ResolvedAst.TypeParams.Kinded)(implicit flix: Flix): KindEnv = tparams0 match {
     case ResolvedAst.TypeParams.Kinded(tparams) =>
       // no chance of collision
-      val map = tparams.foldLeft(Map.empty[Type.UnkindedVar, Kind]) {
+      val map = tparams.foldLeft(Map.empty[Symbol.UnkindedTypeVarSym, Kind]) {
         case (acc, ResolvedAst.TypeParam.Kinded(_, tpe, kind, _)) =>
           acc + (tpe -> kind)
       }
@@ -1035,7 +1035,7 @@ object Kinder {
   private def getStarKindEnvForTypeParams(tparams0: ResolvedAst.TypeParams.Unkinded)(implicit flix: Flix): KindEnv = tparams0 match {
     case ResolvedAst.TypeParams.Unkinded(tparams) =>
       // no chance of collision
-      val map = tparams.foldLeft(Map.empty[Type.UnkindedVar, Kind]) {
+      val map = tparams.foldLeft(Map.empty[Symbol.UnkindedTypeVarSym, Kind]) {
         case (acc, ResolvedAst.TypeParam.Unkinded(_, tpe, _)) =>
           acc + (tpe -> Kind.Star)
       }
@@ -1091,7 +1091,7 @@ object Kinder {
     /**
       * Returns a kind environment consisting of a single mapping.
       */
-    def singleton(pair: (Type.UnkindedVar, Kind)): KindEnv = KindEnv(Map(pair))
+    def singleton(pair: (Symbol.UnkindedTypeVarSym, Kind)): KindEnv = KindEnv(Map(pair))
 
     /**
       * Merges all the given kind environments.
