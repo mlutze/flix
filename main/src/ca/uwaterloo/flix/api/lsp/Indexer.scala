@@ -99,9 +99,12 @@ object Indexer {
   /**
     * Returns a reverse index for the given class `class0`.
     */
-  private def visitClass(class0: TypedAst.Class): Index = {
-    val idx0 = Index.occurrenceOf(class0)
-    val idx1 = visitTypeParam
+  private def visitClass(class0: TypedAst.Class): Index = class0 match {
+    case TypedAst.Class(doc, ann, mod, sym, tparam, superClasses, signatures, laws, loc) =>
+      val idx0 = Index.occurrenceOf(class0)
+      val idx1 = visitTypeParam(tparam)
+      // MATT visit laws, superclasses, (not sigs, those are done at top level)
+      idx0 ++ idx1
   }
 
   /**
