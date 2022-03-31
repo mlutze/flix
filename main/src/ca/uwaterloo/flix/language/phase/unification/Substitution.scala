@@ -201,7 +201,7 @@ case class Substitution(m: Map[Symbol.TypeVarSym, Type]) {
     /**
       * A utility function to replace the text in `tvar` using the computed map.
       */
-    def replace(tvar: Symbol.TypeVarSym): Symbol.TypeVarSym = replacement.get(tvar) match {
+    def replace(tvar: Type.KindedVar): Type = replacement.get(tvar.sym) match {
       case None => tvar
       case Some(text) => tvar.withText(Some(text))
     }

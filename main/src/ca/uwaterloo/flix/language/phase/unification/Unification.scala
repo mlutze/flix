@@ -412,7 +412,7 @@ object Unification {
     */
   def unbindVar(tvar: Type.KindedVar): InferMonad[Unit] =
     InferMonad(s => {
-      Ok((s.unbind(tvar), ()))
+      Ok((s.unbind(tvar.sym), ()))
     })
 
   /**
