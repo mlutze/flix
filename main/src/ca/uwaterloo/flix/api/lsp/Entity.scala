@@ -72,4 +72,8 @@ object Entity {
 
   case class TypeCon(tc: TypeConstructor, loc: SourceLocation) extends Entity
 
+  case class TypeVar(sym: Symbol.KindedTypeVarSym) extends Entity {
+    def loc: SourceLocation = sym.loc
+  }
+
 }

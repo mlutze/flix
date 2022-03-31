@@ -68,6 +68,8 @@ object FindReferencesProvider {
           case _ => mkNotFound(uri, pos)
         }
 
+        case Entity.TypeVar(sym) => findTypeVarReferences(sym)
+
         case _ => mkNotFound(uri, pos)
 
       }
@@ -124,6 +126,13 @@ object FindReferencesProvider {
   }
 
   private def findVarReferences(sym: Symbol.VarSym)(implicit index: Index, root: Root): JObject = {
+    val defSite = Location.from(sym.loc)
+    val useSites = index.usesOf(sym)
+    val locs = defSite :: useSites.toList.map(Location.from)
+    ("status" -> "success") ~ ("result" -> locs.map(_.toJSON))
+  }
+
+  private def findTypeVarReferences(sym: Symbol.KindedTypeVarSym)(implicit index: Index, root: Root): JObject = {
     val defSite = Location.from(sym.loc)
     val useSites = index.usesOf(sym)
     val locs = defSite :: useSites.toList.map(Location.from)

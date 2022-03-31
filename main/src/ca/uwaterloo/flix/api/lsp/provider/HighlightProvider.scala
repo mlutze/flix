@@ -65,6 +65,8 @@ object HighlightProvider {
           case _ => mkNotFound(uri, pos)
         }
 
+        case Entity.TypeVar(sym) => highlightTypeVar(sym)
+
         case _ => mkNotFound(uri, pos)
       }
     }
@@ -117,6 +119,12 @@ object HighlightProvider {
   }
 
   private def highlightVar(sym: Symbol.VarSym)(implicit index: Index, root: Root): JObject = {
+    val write = (sym.loc, DocumentHighlightKind.Write)
+    val reads = index.usesOf(sym).toList.map(loc => (loc, DocumentHighlightKind.Read))
+    highlight(write :: reads)
+  }
+
+  private def highlightTypeVar(sym: Symbol.KindedTypeVarSym)(implicit index: Index, root: Root): JObject = {
     val write = (sym.loc, DocumentHighlightKind.Write)
     val reads = index.usesOf(sym).toList.map(loc => (loc, DocumentHighlightKind.Read))
     highlight(write :: reads)

@@ -17,7 +17,7 @@ package ca.uwaterloo.flix.api.lsp.provider
 
 import ca.uwaterloo.flix.api.lsp.{Entity, Index, MarkupContent, MarkupKind, Position, Range}
 import ca.uwaterloo.flix.language.ast.TypedAst.{Expression, Root}
-import ca.uwaterloo.flix.language.ast.{SourceLocation, Symbol, Type, TypeConstructor}
+import ca.uwaterloo.flix.language.ast.{Kind, SourceLocation, Symbol, Type, TypeConstructor}
 import ca.uwaterloo.flix.language.fmt._
 import org.json4s.JsonAST.JObject
 import org.json4s.JsonDSL._
@@ -49,7 +49,9 @@ object HoverProvider {
 
         case Entity.LocalVar(sym, tpe) => hoverType(tpe, sym.loc)
 
-        case Entity.TypeCon(tc, loc) => hoverTypeConstructor(tc, loc)
+        case Entity.TypeCon(tc, loc) => hoverKind(tc.kind, loc)
+
+        case Entity.TypeVar(sym) => hoverKind(sym.kind, sym.loc)
 
         case _ => mkNotFound(uri, pos)
       }
@@ -120,10 +122,10 @@ object HoverProvider {
     s"$t & $e"
   }
 
-  private def hoverTypeConstructor(tc: TypeConstructor, loc: SourceLocation)(implicit index: Index, root: Root): JObject = {
+  private def hoverKind(kind: Kind, loc: SourceLocation)(implicit index: Index, root: Root): JObject = {
     val markup =
       s"""```flix
-         |${formatKind(tc)}
+         |${formatKind(kind)}
          |```
          |""".stripMargin
     val contents = MarkupContent(MarkupKind.Markdown, markup)
@@ -132,8 +134,8 @@ object HoverProvider {
     ("status" -> "success") ~ ("result" -> result)
   }
 
-  private def formatKind(tc: TypeConstructor): String = {
-    FormatKind.formatKind(tc.kind)
+  private def formatKind(kind: Kind): String = {
+    FormatKind.formatKind(kind)
   }
 
   /**
