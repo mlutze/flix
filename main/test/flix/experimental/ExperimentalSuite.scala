@@ -28,4 +28,6 @@ import ca.uwaterloo.flix.util.{FlixSuite, Options}
   */
 class ExperimentalSuite extends FlixSuite(incremental = true) {
   implicit val options: Options = Options.TestWithLibNix.copy(xallowredundancies = true)
+
+  mkTest("main/test/flix/experimental/Test.Dec.Mptc.flix")(Options.TestWithLibAll)
 }
