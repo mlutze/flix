@@ -83,13 +83,13 @@ object Instances {
       * * The same namespace as its type.
       */
     def checkOrphan(inst: TypedAst.Instance): List[InstanceError] = inst match {
-      case TypedAst.Instance(_, _, _, sym, tpe, _, _, ns, _) => tpe.typeConstructor match {
+      case TypedAst.Instance(_, _, _, sym, tpes, _, _, ns, _) => tpes.last.typeConstructor match { // MATT here we only check the last type
         // Case 1: Enum type in the same namespace as the instance: not an orphan
         case Some(TypeConstructor.KindedEnum(enumSym, _)) if enumSym.namespace == ns.idents.map(_.name) => Nil
         // Case 2: Any type in the class namespace: not an orphan
         case _ if (sym.clazz.namespace) == ns.idents.map(_.name) => Nil
         // Case 3: Any type outside the class companion namespace and enum declaration namespace: orphan
-        case _ => List(InstanceError.OrphanInstance(tpe, sym, sym.loc))
+        case _ => List(InstanceError.OrphanInstance(tpes.last, sym, sym.loc))
       }
     }
 
@@ -99,11 +99,11 @@ object Instances {
       * * all type arguments are variables or booleans
       */
     def checkSimple(inst: TypedAst.Instance): List[InstanceError] = inst match {
-      case TypedAst.Instance(_, _, _, sym, tpe, _, _, _, _) => tpe match {
+      case TypedAst.Instance(_, _, _, sym, tpes, _, _, _, _) => tpes.last match { // MATT only the last one needs to be simple
         case _: Type.Cst => Nil
-        case _: Type.KindedVar => List(InstanceError.ComplexInstanceType(tpe, sym, sym.loc))
+        case _: Type.KindedVar => List(InstanceError.ComplexInstanceType(tpes.last, sym, sym.loc))
         case _: Type.Apply =>
-          val (_, errs0) = tpe.typeArguments.foldLeft((List.empty[Type.KindedVar], List.empty[InstanceError])) {
+          val (_, errs0) = tpes.last.typeArguments.foldLeft((List.empty[Type.KindedVar], List.empty[InstanceError])) {
             // Case 1: Type variable
             case ((seen, errs), tvar: Type.KindedVar) =>
               // Case 1.1 We've seen it already. Error.
@@ -117,7 +117,7 @@ object Instances {
             // Case 3: False. Continue.
             case (acc, Type.Cst(TypeConstructor.False, _)) => acc
             // Case 4: Some other type. Error.
-            case ((seen, errs), _) => (seen, InstanceError.ComplexInstanceType(tpe, sym, sym.loc) :: errs)
+            case ((seen, errs), _) => (seen, InstanceError.ComplexInstanceType(tpes.last, sym, sym.loc) :: errs)
           }
           errs0
         case Type.Alias(alias, _, _, _) => List(InstanceError.IllegalTypeAliasInstance(alias.sym, sym, sym.loc))
@@ -132,7 +132,7 @@ object Instances {
       * Checks for overlap of instance types, assuming the instances are of the same class.
       */
     def checkOverlap(inst1: TypedAst.Instance, inst2: TypedAst.Instance)(implicit flix: Flix): List[InstanceError] = {
-      Unification.unifyTypes(generifyBools(inst1.tpe), inst2.tpe, RigidityEnv.empty) match {
+      Unification.unifyTypes(generifyBools(inst1.tpes.last), inst2.tpes.last, RigidityEnv.empty) match { // MATT only care about last type
         case Ok(_) =>
           List(
             InstanceError.OverlappingInstances(inst1.sym.loc, inst2.sym.loc),
@@ -178,7 +178,9 @@ object Instances {
             case (Some(defn), Some(_)) if !defn.spec.mod.isOverride => List(InstanceError.UnmarkedOverride(defn.sym, defn.sym.loc))
             // Case 5: there is an implementation with the right modifier
             case (Some(defn), _) =>
-              val expectedScheme = Scheme.partiallyInstantiate(sig.spec.declaredScheme, clazz.tparam.sym, inst.tpe)
+              val expectedScheme = clazz.tparams.map(_.sym).zip(inst.tpes).foldLeft(sig.spec.declaredScheme) {
+                case (sc, (sym, tpe)) => Scheme.partiallyInstantiate(sc, sym, tpe)
+              }
               if (Scheme.equal(expectedScheme, defn.spec.declaredScheme, root.classEnv)) {
                 // Case 5.1: the schemes match. Success!
                 Nil
@@ -207,7 +209,7 @@ object Instances {
       val superInsts = root.classEnv.get(clazz).map(_.instances).getOrElse(Nil)
       // lazily find the instance whose type unifies and save the substitution
       superInsts.iterator.flatMap {
-        superInst => Unification.unifyTypes(tpe, superInst.tpe, RigidityEnv.empty).toOption.map((superInst, _))
+        superInst => Unification.unifyTypes(tpe, superInst.tpes.last, RigidityEnv.empty).toOption.map((superInst, _))
       }.nextOption()
     }
 
@@ -216,12 +218,12 @@ object Instances {
       * and that the constraints on `inst` entail the constraints on the super instance.
       */
     def checkSuperInstances(inst: TypedAst.Instance): List[InstanceError] = inst match {
-      case TypedAst.Instance(_, _, _, sym, tpe, tconstrs, _, _, _) =>
+      case TypedAst.Instance(_, _, _, sym, tpes, tconstrs, _, _, _) =>
         val superClasses = root.classEnv(sym.clazz).superClasses
         superClasses flatMap {
           superClass =>
             // Find the instance of the superclass matching the type of this instance.
-            findInstanceForType(tpe, superClass) match {
+            findInstanceForType(tpes.last, superClass) match {
               case Some((superInst, subst)) =>
                 // Case 1: An instance matches. Check that its constraints are entailed by this instance.
                 superInst.tconstrs flatMap {
@@ -236,7 +238,7 @@ object Instances {
                 }
               case None =>
                 // Case 2: No instance matches. Error.
-                List(InstanceError.MissingSuperClassInstance(tpe, sym, superClass, sym.loc))
+                List(InstanceError.MissingSuperClassInstance(tpes.last, sym, superClass, sym.loc))
             }
         }
     }

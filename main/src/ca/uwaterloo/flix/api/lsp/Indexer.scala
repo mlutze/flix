@@ -115,7 +115,7 @@ object Indexer {
   private def visitInstance(instance0: Instance): Index = instance0 match {
     case Instance(_, _, _, sym, tpe, tconstrs, defs, _, _) =>
       val idx1 = Index.useOf(sym.clazz, sym.loc)
-      val idx2 = visitType(tpe)
+      val idx2 = tpe.map(visitType).reduce(_ ++ _)
       val idx3 = traverse(tconstrs)(visitTypeConstraint)
       val idx4 = traverse(defs)(visitDef)
       idx1 ++ idx2 ++ idx3 ++ idx4
@@ -548,7 +548,7 @@ object Indexer {
     * Returns a reverse index for the given type constraint `tconstr0`.
     */
   private def visitTypeConstraint(tconstr0: Ast.TypeConstraint): Index = tconstr0 match {
-    case Ast.TypeConstraint(head, arg, _) => visitTypeConstraintHead(head) ++ visitType(arg)
+    case Ast.TypeConstraint(head, arg, _) => visitTypeConstraintHead(head) ++ arg.map(visitType).reduce(_ ++ _)
   }
 
   /**

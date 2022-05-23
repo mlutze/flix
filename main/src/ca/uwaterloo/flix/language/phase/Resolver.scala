@@ -294,8 +294,8 @@ object Resolver {
     * Resolves all the classes in the given root.
     */
   def resolveClass(c0: NamedAst.Class, taenv: Map[Symbol.TypeAliasSym, ResolvedAst.TypeAlias], ns0: Name.NName, root: NamedAst.Root)(implicit flix: Flix): Validation[ResolvedAst.Class, ResolutionError] = c0 match {
-    case NamedAst.Class(doc, ann0, mod, sym, tparam0, superClasses0, signatures, laws0, loc) =>
-      val tparam = Params.resolveTparam(tparam0)
+    case NamedAst.Class(doc, ann0, mod, sym, tparams0, superClasses0, signatures, laws0, loc) =>
+      val tparams = resolveTypeParams(tparams0, ns0, root)
       val annVal = traverse(ann0)(visitAnnotation(_, taenv, ns0, root))
       val sigsListVal = traverse(signatures)(resolveSig(_, taenv, ns0, root))
       // ignore the parameter of the super class; we don't use it
@@ -304,7 +304,7 @@ object Resolver {
       mapN(annVal, sigsListVal, superClassesVal, lawsVal) {
         case (ann, sigsList, superClasses, laws) =>
           val sigs = sigsList.map(sig => (sig.sym, sig)).toMap
-          ResolvedAst.Class(doc, ann, mod, sym, tparam, superClasses, sigs, laws, loc)
+          ResolvedAst.Class(doc, ann, mod, sym, tparams, superClasses, sigs, laws, loc)
       }
   }
 
@@ -312,16 +312,16 @@ object Resolver {
     * Performs name resolution on the given instance `i0` in the given namespace `ns0`.
     */
   def resolveInstance(i0: NamedAst.Instance, taenv: Map[Symbol.TypeAliasSym, ResolvedAst.TypeAlias], ns0: Name.NName, root: NamedAst.Root)(implicit flix: Flix): Validation[ResolvedAst.Instance, ResolutionError] = i0 match {
-    case NamedAst.Instance(doc, ann0, mod, clazz0, tpe0, tconstrs0, defs0, loc) =>
+    case NamedAst.Instance(doc, ann0, mod, clazz0, tpes0, tconstrs0, defs0, loc) =>
       val annVal = traverse(ann0)(visitAnnotation(_, taenv, ns0, root))
       val clazzVal = lookupClassForImplementation(clazz0, ns0, root)
-      val tpeVal = resolveType(tpe0, taenv, ns0, root)
+      val tpesVal = traverse(tpes0)(resolveType(_, taenv, ns0, root))
       val tconstrsVal = traverse(tconstrs0)(resolveTypeConstraint(_, taenv, ns0, root))
       val defsVal = traverse(defs0)(resolveDef(_, taenv, ns0, root))
-      mapN(annVal, clazzVal, tpeVal, tconstrsVal, defsVal) {
-        case (ann, clazz, tpe, tconstrs, defs) =>
+      mapN(annVal, clazzVal, tpesVal, tconstrsVal, defsVal) {
+        case (ann, clazz, tpes, tconstrs, defs) =>
           val sym = Symbol.freshInstanceSym(clazz.sym, clazz0.loc)
-          ResolvedAst.Instance(doc, ann, mod, sym, tpe, tconstrs, defs, ns0, loc)
+          ResolvedAst.Instance(doc, ann, mod, sym, tpes, tconstrs, defs, ns0, loc)
       }
   }
 
@@ -1432,14 +1432,14 @@ object Resolver {
     * Performs name resolution on the given type constraint `tconstr0`.
     */
   def resolveTypeConstraint(tconstr0: NamedAst.TypeConstraint, taenv: Map[Symbol.TypeAliasSym, ResolvedAst.TypeAlias], ns0: Name.NName, root: NamedAst.Root)(implicit flix: Flix): Validation[ResolvedAst.TypeConstraint, ResolutionError] = tconstr0 match {
-    case NamedAst.TypeConstraint(clazz0, tpe0, loc) =>
+    case NamedAst.TypeConstraint(clazz0, tpes0, loc) =>
       val classVal = lookupClass(clazz0, ns0, root)
-      val tpeVal = resolveType(tpe0, taenv, ns0, root)
+      val tpesVal = traverse(tpes0)(resolveType(_, taenv, ns0, root))
 
-      mapN(classVal, tpeVal) {
-        case (clazz, tpe) =>
+      mapN(classVal, tpesVal) {
+        case (clazz, tpes) =>
           val head = Ast.TypeConstraint.Head(clazz.sym, clazz0.loc)
-          ResolvedAst.TypeConstraint(head, tpe, loc)
+          ResolvedAst.TypeConstraint(head, tpes, loc)
       }
   }
 
@@ -1447,14 +1447,14 @@ object Resolver {
     * Performs name resolution on the given superclass constraint `tconstr0`.
     */
   def resolveSuperClass(tconstr0: NamedAst.TypeConstraint, taenv: Map[Symbol.TypeAliasSym, ResolvedAst.TypeAlias], ns0: Name.NName, root: NamedAst.Root)(implicit flix: Flix): Validation[ResolvedAst.TypeConstraint, ResolutionError] = tconstr0 match {
-    case NamedAst.TypeConstraint(clazz0, tpe0, loc) =>
+    case NamedAst.TypeConstraint(clazz0, tpes0, loc) =>
       val classVal = lookupClassForImplementation(clazz0, ns0, root)
-      val tpeVal = resolveType(tpe0, taenv, ns0, root)
+      val tpesVal = traverse(tpes0)(resolveType(_, taenv, ns0, root))
 
-      mapN(classVal, tpeVal) {
-        case (clazz, tpe) =>
+      mapN(classVal, tpesVal) {
+        case (clazz, tpes) =>
           val head = Ast.TypeConstraint.Head(clazz.sym, clazz0.loc)
-          ResolvedAst.TypeConstraint(head, tpe, loc)
+          ResolvedAst.TypeConstraint(head, tpes, loc)
       }
   }
 
