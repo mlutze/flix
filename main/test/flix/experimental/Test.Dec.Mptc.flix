@@ -17,6 +17,22 @@ instance Collection[(k, v), Map[k, v]] with Eq[v], Order[k] {
         Map.get(k, coll) == Some(v)
 }
 
+pub enum MyIterator[r: Region, a: Type](Unit -> Option[a] & r)
+
+def mkIterator(next: Unit -> Option[a] & r1, r: Region[r]): MyIterator[r1 and r, a] = ???
+
+pub class MyIterable[r: Region, elm: Type, a: Type] {
+    pub def toIterator(x: a, r1: Region[r1]): MyIterator[r and r1, elm]
+}
+
+instance MyIterable[Pure, a, List[a]] {
+    pub def toIterator(x: List[a], r1: Region[r1]): MyIterator[r1, a] = mkIterator(_ -> List.head(x), r1)
+}
+
+instance MyIterable[r1, a, ScopedArray[a, r1]] {
+    pub def toIterator(x: ScopedArray[a, r1], r2: Region[r2]): MyIterator[r1 and r2, a] = mkIterator(_ -> Some(x[0]), r2)
+}
+
 //class ToString2[ef: Bool, a: Type] {
 //    pub def toString(x: a): String & ef
 //}
