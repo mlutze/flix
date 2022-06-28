@@ -33,24 +33,6 @@ instance MyIterable[r1, a, Array[a, r1]] {
     pub def toIterator(x: Array[a, r1], r2: Region[r2]): MyIterator[r1 and r2, a] = mkIterator(_ -> Some(x[0]), r2)
 }
 
-//class ToString2[ef: Bool, a: Type] {
-//    pub def toString(x: a): String & ef
-//}
-//
-//instance ToString2[{Read(r), ef}, Array[a, r]] with ToString2[ef, a] {
-//    pub def toString(a: Array[a, r]): String & {Read(r), ef} = {
-//        def loop(i, acc) =
-//            if (i < a.length) {
-//                if (i == 0) loop(i + 1, "${a[i]}")
-//                else loop(i + 1, "${acc}, ${a[i]}")
-//            } else {
-//                "[${acc}]"
-//            };
-//        loop(0, "")
-//    }
-//}
-
-
 @test
 def testContains01(): Bool = Collection.contains('a', "abc")
 
@@ -59,3 +41,24 @@ def testContains02(): Bool = Collection.contains('b', "abc")
 
 @test
 def testContains03(): Bool = not Collection.contains('d', "abc")
+
+// MATT I think we need to pull extra tparams into the tenv for these (e.g. r2)
+//class ToString2[ef: Bool, a: Type] {
+//    pub def toString(x: a): String & ef
+//}
+//
+//instance ToString2[r1 and r2, Ref[a, r1]] with ToString2[r2, a] {
+//    pub def toString(x: Ref[a, r1]): String & r1 and r2 = ToString2.toString(deref x)
+//}
+//
+//instance ToString2[Pure, Int32] {
+//    pub def toString(x: Int32): String = "hello"
+//}
+//
+//@test
+//def testToString01(): Bool = {
+//    region r {
+//        let i = ref 4 @ r;
+//        ToString2.toString(i) == "hello"
+//    }
+//}
