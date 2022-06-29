@@ -33,6 +33,18 @@ instance MyIterable[r1, a, Array[a, r1]] {
     pub def toIterator(x: Array[a, r1], r2: Region[r2]): MyIterator[r1 and r2, a] = mkIterator(_ -> Some(x[0]), r2)
 }
 
+pub class MyForeach[r: Region, elm: Type, a: Type] {
+    pub def foreach(f: elm -> Unit & ef, x: a): Unit & ef and r
+}
+
+instance MyForeach[Pure, a, List[a]] {
+    pub def foreach(f: a -> Unit & ef, x: List[a]): Unit & ef = List.foreach(f, x)
+}
+
+instance MyForeach[r, a, Array[a, r]] {
+    pub def foreach(f: a -> Unit & ef, x: Array[a, r]): Unit & ef and r = Array.foreach(f, x)
+}
+
 @test
 def testContains01(): Bool = Collection.contains('a', "abc")
 
