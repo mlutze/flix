@@ -101,7 +101,9 @@ object UnificationError {
     *
     * @param tconstr the type constraint.
     */
-  case class NoMatchingInstance(tconstr: Ast.TypeConstraint) extends UnificationError
+  case class NoMatchingInstance(tconstr: Ast.TypeConstraint) extends UnificationError {
+    println("debug") // MATT
+  }
 
   /**
     * A unification error resulting from multiple matching instances.

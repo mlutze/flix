@@ -122,7 +122,8 @@ object ClassEnvironment {
       // NB: This is different from the THIH implementation.
       // We also check `leq` instead of just `unifies` in order to support complex types in instances.
       for {
-        subst <- Scheme.checkLessThanEqual(instSc, tconstrSc, Map.empty)
+//        subst <- Scheme.checkLessThanEqual(instSc, tconstrSc, Map.empty) // MATT make this change official
+        subst <- Unification.unifyTypes(tconstr.arg.last, inst.tpes.last, RigidityEnv.empty).toValidation
       } yield inst.tconstrs.map(subst(_))
     }
 

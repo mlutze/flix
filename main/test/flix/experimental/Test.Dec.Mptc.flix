@@ -74,3 +74,17 @@ def testContains03(): Bool = not Collection.contains('d', "abc")
 //        ToString2.toString(i) == "hello"
 //    }
 //}
+
+
+pub class Iterable2[r: Region, elm: Type, col: Type] {
+    pub def iterator(r2: Region[r2], t: col): Iterator[elm, r and r2]
+}
+
+instance Iterable2[r, a, MutList[a, r]] {
+    pub def iterator(r2: Region[r2], t: MutList[a, r]): Iterator[a, r and r2] = ???
+}
+
+
+pub def append!(m: c, v: MutList[a, r]): Unit \ { Read(r, r2), Write(r, r2) } with Iterable2[r2, a, c] = region reg {
+    m |> Iterable2.iterator(reg) |> Iterator.foreach(x -> MutList.push!(x, v))
+}
