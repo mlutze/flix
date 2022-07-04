@@ -32,9 +32,11 @@ object ClassEnvironment {
     * That is, `tconstr` is true if all of `tconstrs0` are true.
     */
   // MATT THIH says that toncstrs0 should always be in HNF so checking for byInst is a waste.
-  def entail(tconstrs0: List[Ast.TypeConstraint], tconstr: Ast.TypeConstraint, classEnv: Map[Symbol.ClassSym, Ast.ClassContext])(implicit flix: Flix): Validation[Unit, UnificationError] = {
+  def entail(tconstrs0: List[Ast.TypeConstraint], tconstr: Ast.TypeConstraint, classEnv: Map[Symbol.ClassSym, Ast.ClassContext])(implicit flix: Flix): Validation[Substitution, UnificationError] = {
 
     val superClasses = tconstrs0.flatMap(bySuper(_, classEnv))
+
+    val matchingSupers = superClasses.filter(baseMatch(tconstr, _))
 
     // Case 1: tconstrs0 entail tconstr if tconstr is a super class of any member of tconstrs0
     if (superClasses.contains(tconstr)) {
@@ -46,6 +48,13 @@ object ClassEnvironment {
         _ <- Validation.sequence(tconstrs.map(entail(tconstrs0, _, classEnv)))
       } yield ()
     }
+  }
+
+  /**
+    * Returns true iff the two type constraints have the same head and final (determining) argument.
+    */
+  private def baseMatch(tconstr1: Ast.TypeConstraint, tconstr2: Ast.TypeConstraint): Boolean = (tconstr1, tconstr2) match {
+    case (Ast.TypeConstraint(head1, _ :+ arg1, _), Ast.TypeConstraint(head2, _ :+ arg2, _)) => head1 == head2 && arg1 == arg2
   }
 
   /**
@@ -122,8 +131,8 @@ object ClassEnvironment {
       // NB: This is different from the THIH implementation.
       // We also check `leq` instead of just `unifies` in order to support complex types in instances.
       for {
-//        subst <- Scheme.checkLessThanEqual(instSc, tconstrSc, Map.empty) // MATT make this change official
-        subst <- Unification.unifyTypes(tconstr.arg.last, inst.tpes.last, RigidityEnv.empty).toValidation
+        subst <- Scheme.checkLessThanEqual(instSc, tconstrSc, Map.empty) // MATT make this change official
+//        subst <- Unification.unifyTypes(tconstr.arg.last, inst.tpes.last, RigidityEnv.empty).toValidation
       } yield inst.tconstrs.map(subst(_))
     }
 
