@@ -116,7 +116,7 @@ object Deriver {
         ann = Nil,
         mod = Ast.Modifiers.Empty,
         sym = eqInstanceSym,
-        tpe = tpe,
+        tpes = List(tpe),
         tconstrs = tconstrs,
         defs = List(defn),
         ns = Name.RootNS,
@@ -161,13 +161,13 @@ object Deriver {
         ),
         sc = Scheme(
           tparams.map(_.sym),
-          List(Ast.TypeConstraint(Ast.TypeConstraint.Head(eqClassSym, loc), tpe, loc)),
+          List(Ast.TypeConstraint(Ast.TypeConstraint.Head(eqClassSym, loc), List(tpe), loc)),
           Type.mkPureUncurriedArrow(List(tpe, tpe), Type.mkBool(loc), loc)
         ),
         tpe = Type.mkBool(loc),
         pur = Type.Cst(TypeConstructor.True, loc),
         eff = Type.Cst(TypeConstructor.Empty, loc),
-        tconstrs = List(Ast.TypeConstraint(Ast.TypeConstraint.Head(eqClassSym, loc), tpe, loc)),
+        tconstrs = List(Ast.TypeConstraint(Ast.TypeConstraint.Head(eqClassSym, loc), List(tpe), loc)),
         loc = loc
       )
   }
@@ -267,7 +267,7 @@ object Deriver {
         ann = Nil,
         mod = Ast.Modifiers.Empty,
         sym = orderInstanceSym,
-        tpe = tpe,
+        tpes = List(tpe),
         tconstrs = tconstrs,
         defs = List(defn),
         ns = Name.RootNS,
@@ -359,13 +359,13 @@ object Deriver {
         ),
         sc = Scheme(
           tparams.map(_.sym),
-          List(Ast.TypeConstraint(Ast.TypeConstraint.Head(orderClassSym, loc), tpe, loc)),
+          List(Ast.TypeConstraint(Ast.TypeConstraint.Head(orderClassSym, loc), List(tpe), loc)),
           Type.mkPureUncurriedArrow(List(tpe, tpe), Type.mkEnum(comparisonEnumSym, Kind.Star, loc), loc)
         ),
         tpe = Type.mkEnum(comparisonEnumSym, Kind.Star, loc),
         pur = Type.Cst(TypeConstructor.True, loc),
         eff = Type.Cst(TypeConstructor.Empty, loc),
-        tconstrs = List(Ast.TypeConstraint(Ast.TypeConstraint.Head(orderClassSym, loc), tpe, loc)),
+        tconstrs = List(Ast.TypeConstraint(Ast.TypeConstraint.Head(orderClassSym, loc), List(tpe), loc)),
         loc = loc
       )
   }
@@ -486,7 +486,7 @@ object Deriver {
         ann = Nil,
         mod = Ast.Modifiers.Empty,
         sym = toStringInstanceSym,
-        tpe = tpe,
+        tpes = List(tpe),
         tconstrs = tconstrs,
         defs = List(defn),
         ns = Name.RootNS,
@@ -524,13 +524,13 @@ object Deriver {
         fparams = List(KindedAst.FormalParam(param, Ast.Modifiers.Empty, tpe, Ast.TypeSource.Ascribed, loc)),
         sc = Scheme(
           tparams.map(_.sym),
-          List(Ast.TypeConstraint(Ast.TypeConstraint.Head(toStringClassSym, loc), tpe, loc)),
+          List(Ast.TypeConstraint(Ast.TypeConstraint.Head(toStringClassSym, loc), List(tpe), loc)),
           Type.mkPureArrow(tpe, Type.mkString(loc), loc)
         ),
         tpe = Type.mkString(loc),
         pur = Type.Cst(TypeConstructor.True, loc),
         eff = Type.Cst(TypeConstructor.Empty, loc),
-        tconstrs = List(Ast.TypeConstraint(Ast.TypeConstraint.Head(toStringClassSym, loc), tpe, loc)),
+        tconstrs = List(Ast.TypeConstraint(Ast.TypeConstraint.Head(toStringClassSym, loc), List(tpe), loc)),
         loc = loc
       )
   }
@@ -622,7 +622,7 @@ object Deriver {
         ann = Nil,
         mod = Ast.Modifiers.Empty,
         sym = hashInstanceSym,
-        tpe = tpe,
+        tpes = List(tpe),
         tconstrs = tconstrs,
         defs = List(defn),
         ns = Name.RootNS,
@@ -662,13 +662,13 @@ object Deriver {
         fparams = List(KindedAst.FormalParam(param, Ast.Modifiers.Empty, tpe, Ast.TypeSource.Ascribed, loc)),
         sc = Scheme(
           tparams.map(_.sym),
-          List(Ast.TypeConstraint(Ast.TypeConstraint.Head(hashClassSym, loc), tpe, loc)),
+          List(Ast.TypeConstraint(Ast.TypeConstraint.Head(hashClassSym, loc), List(tpe), loc)),
           Type.mkPureArrow(tpe, Type.mkInt32(loc), loc)
         ),
         tpe = Type.mkInt32(loc),
         pur = Type.Cst(TypeConstructor.True, loc),
         eff = Type.Cst(TypeConstructor.Empty, loc),
-        tconstrs = List(Ast.TypeConstraint(Ast.TypeConstraint.Head(hashClassSym, loc), tpe, loc)),
+        tconstrs = List(Ast.TypeConstraint(Ast.TypeConstraint.Head(hashClassSym, loc), List(tpe), loc)),
         loc = loc
       )
   }
@@ -745,7 +745,7 @@ object Deriver {
         ann = Nil,
         mod = Ast.Modifiers.Empty,
         sym = boxableInstanceSym,
-        tpe = tpe,
+        tpes = List(tpe),
         tconstrs = tconstrs,
         defs = Nil,
         ns = Name.RootNS,
@@ -798,7 +798,7 @@ object Deriver {
     */
   private def getTypeConstraintsForTypeParams(tparams: List[KindedAst.TypeParam], clazz: Symbol.ClassSym, loc: SourceLocation): List[Ast.TypeConstraint] = tparams.collect {
     case tparam if tparam.sym.kind == Kind.Star && !tparam.name.isWild =>
-      Ast.TypeConstraint(Ast.TypeConstraint.Head(clazz, loc), Type.Var(tparam.sym, loc), loc)
+      Ast.TypeConstraint(Ast.TypeConstraint.Head(clazz, loc), List(Type.Var(tparam.sym, loc)), loc)
   }
 
   /**

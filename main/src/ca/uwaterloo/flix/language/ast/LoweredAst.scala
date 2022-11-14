@@ -33,9 +33,9 @@ object LoweredAst {
                   sources: Map[Source, SourceLocation],
                   classEnv: Map[Symbol.ClassSym, Ast.ClassContext])
 
-  case class Class(doc: Ast.Doc, ann: List[LoweredAst.Annotation], mod: Ast.Modifiers, sym: Symbol.ClassSym, tparam: LoweredAst.TypeParam, superClasses: List[Ast.TypeConstraint], signatures: List[LoweredAst.Sig], laws: List[LoweredAst.Def], loc: SourceLocation)
+  case class Class(doc: Ast.Doc, ann: List[LoweredAst.Annotation], mod: Ast.Modifiers, sym: Symbol.ClassSym, tparams: List[LoweredAst.TypeParam], superClasses: List[Ast.TypeConstraint], signatures: List[LoweredAst.Sig], laws: List[LoweredAst.Def], loc: SourceLocation)
 
-  case class Instance(doc: Ast.Doc, ann: List[LoweredAst.Annotation], mod: Ast.Modifiers, sym: Symbol.InstanceSym, tpe: Type, tconstrs: List[Ast.TypeConstraint], defs: List[LoweredAst.Def], ns: Name.NName, loc: SourceLocation)
+  case class Instance(doc: Ast.Doc, ann: List[LoweredAst.Annotation], mod: Ast.Modifiers, sym: Symbol.InstanceSym, tpes: List[Type], tconstrs: List[Ast.TypeConstraint], defs: List[LoweredAst.Def], ns: Name.NName, loc: SourceLocation)
 
   case class Sig(sym: Symbol.SigSym, spec: LoweredAst.Spec, impl: Option[LoweredAst.Impl])
 

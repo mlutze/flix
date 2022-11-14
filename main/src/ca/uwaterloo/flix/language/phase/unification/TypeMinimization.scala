@@ -57,8 +57,9 @@ object TypeMinimization {
 
       // filter out unused type constraints
       val newTconstrs = constraints.filter {
-        case Ast.TypeConstraint(_, Type.Var(sym, _), _) if tvars.contains(sym) => true
-        case _ => false
+//        case Ast.TypeConstraint(_, Type.Var(sym, _), _) if tvars.contains(sym) => true
+//        case _ => false
+        case _ => true // MATT hack for now
       }
       Scheme(newQuants, newTconstrs, newBase)
   }

@@ -69,9 +69,9 @@ object Scheme {
     val newBase = visitType(baseType)
 
     val newConstrs = sc.constraints.map {
-      case Ast.TypeConstraint(head, tpe0, loc) =>
-        val tpe = tpe0.map(visitType)
-        Ast.TypeConstraint(head, tpe, loc)
+      case Ast.TypeConstraint(head, tpes0, loc) =>
+        val tpes = tpes0.map(_.map(visitType))
+        Ast.TypeConstraint(head, tpes, loc)
     }
 
     (newConstrs, newBase)
@@ -81,7 +81,7 @@ object Scheme {
     * Generalizes the given type `tpe0` with respect to the empty type environment.
     */
   def generalize(tconstrs: List[Ast.TypeConstraint], tpe0: Type): Scheme = {
-    val quantifiers = tpe0.typeVars ++ tconstrs.flatMap(tconstr => tconstr.arg.typeVars)
+    val quantifiers = tpe0.typeVars ++ tconstrs.flatMap(tconstr => tconstr.arg.flatMap(_.typeVars))
     Scheme(quantifiers.toList.map(_.sym), tconstrs, tpe0)
   }
 
@@ -130,9 +130,9 @@ object Scheme {
     // Attempt to unify the two instantiated types.
     for {
       subst <- Unification.unifyTypes(sc1.base, sc2.base, renv).toValidation
-      newTconstrs1 <- ClassEnvironment.reduce(sc1.constraints.map(subst.apply), classEnv)
-      newTconstrs2 <- ClassEnvironment.reduce(sc2.constraints.map(subst.apply), classEnv)
-      _ <- Validation.sequence(newTconstrs1.map(ClassEnvironment.entail(newTconstrs2, _, classEnv)))
+      newTconstrs1 <- ClassEnvironment.reduce(sc1.constraints.map(subst.apply), classEnv, renv)
+      newTconstrs2 <- ClassEnvironment.reduce(sc2.constraints.map(subst.apply), classEnv, renv)
+      _ <- Validation.sequence(newTconstrs1.map(ClassEnvironment.entail(newTconstrs2, _, classEnv, renv))) // MATT use this subst
     } yield subst
   }
 

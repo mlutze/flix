@@ -139,6 +139,17 @@ object Unification {
     case _ => Result.Err(UnificationError.MismatchedTypes(tpe1, tpe2))
   }
 
+  // MATT docs
+  def unifyAll(tpes1: List[Type], tpes2: List[Type], renv: RigidityEnv)(implicit flix: Flix): Result[Substitution, UnificationError] = (tpes1, tpes2) match {
+    case (Nil, Nil) => Ok(Substitution.empty)
+    case (hd1 :: tl1, hd2 :: tl2) =>
+      for {
+        subst1 <- unifyTypes(hd1, hd2, renv)
+        subst2 <- unifyAll(tl1, tl2, renv)
+      } yield subst2 @@ subst1
+    case _ => throw InternalCompilerException("unexpected unequal type lists")
+  }
+
   /**
     * Lifts the given type `tpe` into the inference monad.
     */

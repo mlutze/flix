@@ -16,7 +16,7 @@
 package ca.uwaterloo.flix.language.phase
 
 import ca.uwaterloo.flix.api.Flix
-import ca.uwaterloo.flix.language.ast.{Ast, Scheme, SourceLocation, Symbol, Type, TypeConstructor, TypedAst}
+import ca.uwaterloo.flix.language.ast.{Ast, RigidityEnv, Scheme, SourceLocation, Symbol, Type, TypeConstructor, TypedAst}
 import ca.uwaterloo.flix.language.errors.EntryPointError
 import ca.uwaterloo.flix.language.phase.unification.ClassEnvironment
 import ca.uwaterloo.flix.util.Validation.{ToFailure, ToSuccess, flatMapN, mapN}
@@ -171,7 +171,11 @@ object EntryPoint {
       } else {
         // Delay ToString resolution if main has return type unit for testing with lib nix.
         val toString = root.classes(new Symbol.ClassSym(Nil, "ToString", SourceLocation.Unknown)).sym
-        if (ClassEnvironment.holds(Ast.TypeConstraint(Ast.TypeConstraint.Head(toString, SourceLocation.Unknown), resultTpe, SourceLocation.Unknown), classEnv)) {
+        val renv = resultTpe.typeVars.foldLeft(RigidityEnv.empty) {
+          case (acc, Type.Var(tvar, _)) => acc.markRigid(tvar)
+          case (acc, _) => acc
+        }
+        if (ClassEnvironment.holds(Ast.TypeConstraint(Ast.TypeConstraint.Head(toString, SourceLocation.Unknown), List(resultTpe), SourceLocation.Unknown), classEnv, RigidityEnv.empty)) {
           // Case 2: XYZ -> a with ToString[a]
           ().toSuccess
         } else {

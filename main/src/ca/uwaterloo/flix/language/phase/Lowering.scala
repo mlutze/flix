@@ -196,12 +196,12 @@ object Lowering {
     * Lowers the given instance `inst0`.
     */
   private def visitInstance(inst0: TypedAst.Instance)(implicit root: TypedAst.Root, flix: Flix): LoweredAst.Instance = inst0 match {
-    case TypedAst.Instance(doc, ann0, mod, sym, tpe0, tconstrs0, defs0, ns, loc) =>
-      val tpe = visitType(tpe0)
+    case TypedAst.Instance(doc, ann0, mod, sym, tpes0, tconstrs0, defs0, ns, loc) =>
+      val tpes = tpes0.map(visitType(_))
       val tconstrs = tconstrs0.map(visitTypeConstraint)
       val defs = defs0.map(visitDef)
       val ann = ann0.map(visitAnnotation)
-      LoweredAst.Instance(doc, ann, mod, sym, tpe, tconstrs, defs, ns, loc)
+      LoweredAst.Instance(doc, ann, mod, sym, tpes, tconstrs, defs, ns, loc)
   }
 
   /**
@@ -254,22 +254,22 @@ object Lowering {
     * Lowers the given type constraint `tconstr0`.
     */
   private def visitTypeConstraint(tconstr0: Ast.TypeConstraint)(implicit root: TypedAst.Root, flix: Flix): Ast.TypeConstraint = tconstr0 match {
-    case Ast.TypeConstraint(head, tpe0, loc) =>
-      val tpe = visitType(tpe0)
-      Ast.TypeConstraint(head, tpe, loc)
+    case Ast.TypeConstraint(head, tpes0, loc) =>
+      val tpes = tpes0.map(visitType)
+      Ast.TypeConstraint(head, tpes, loc)
   }
 
   /**
     * Lowers the given class `clazz0`, with the given lowered sigs `sigs`.
     */
   private def visitClass(clazz0: TypedAst.Class, sigs: Map[Symbol.SigSym, LoweredAst.Sig])(implicit root: TypedAst.Root, flix: Flix): LoweredAst.Class = clazz0 match {
-    case TypedAst.Class(doc, ann0, mod, sym, tparam0, superClasses0, signatures0, laws0, loc) =>
+    case TypedAst.Class(doc, ann0, mod, sym, tparams0, superClasses0, signatures0, laws0, loc) =>
       val ann = ann0.map(visitAnnotation)
-      val tparam = visitTypeParam(tparam0)
+      val tparams = tparams0.map(visitTypeParam)
       val superClasses = superClasses0.map(visitTypeConstraint)
       val signatures = signatures0.map(sig => sigs(sig.sym))
       val laws = laws0.map(visitDef)
-      LoweredAst.Class(doc, ann, mod, sym, tparam, superClasses, signatures, laws, loc)
+      LoweredAst.Class(doc, ann, mod, sym, tparams, superClasses, signatures, laws, loc)
   }
 
   /**

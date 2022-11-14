@@ -32,7 +32,7 @@ object FormatTypeConstraint {
     */
   def formatTypeConstraintWithOptions(tconstr: Ast.TypeConstraint, fmt: FormatOptions): String = tconstr match {
     case Ast.TypeConstraint(head, arg, _) =>
-      val typeString = FormatType.formatTypeWithOptions(arg, fmt)
+      val typeString = arg.map(FormatType.formatTypeWithOptions(_, fmt)).mkString(", ")
       s"${head.sym}[${typeString}]"
   }
 }

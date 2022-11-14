@@ -787,14 +787,14 @@ object CompletionProvider {
     /**
       * Formats the given type `tpe`.
       */
-    def fmtType(clazz: TypedAst.Class, tpe: Type, hole: String)(implicit flix: Flix): String =
-      FormatType.formatType(replaceText(clazz.tparam.sym, tpe, hole))
+    def fmtType(clazz: TypedAst.Class, tpe: Type, hole: String): String =
+      FormatType.formatType(replaceText(clazz.tparams.last.sym, tpe, hole)) // MATT
 
     /**
       * Formats the given class `clazz`.
       */
     def fmtClass(clazz: TypedAst.Class): String = {
-      s"class ${clazz.sym.name}[${clazz.tparam.name.name}]"
+      s"class ${clazz.sym.name}[${clazz.tparams.last.name.name}]" // MATT
     }
 
     /**
