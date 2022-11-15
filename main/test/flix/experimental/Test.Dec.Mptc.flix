@@ -34,15 +34,15 @@ instance MyIterable[r1, a, Array[a, r1]] {
 }
 
 pub class MyForeach[r: Region, elm: Type, a: Type] {
-    pub def foreach(f: elm -> Unit & ef, x: a): Unit & ef and r
+    pub def forEach(f: elm -> Unit & ef, x: a): Unit & ef and r
 }
 
 instance MyForeach[Pure, a, List[a]] {
-    pub def foreach(f: a -> Unit & ef, x: List[a]): Unit & ef and Pure = List.foreach(f, x) // MATT hack
+    pub def forEach(f: a -> Unit & ef, x: List[a]): Unit & ef and Pure = List.forEach(f, x) // MATT hack
 }
 
 instance MyForeach[r, a, Array[a, r]] {
-    pub def foreach(f: a -> Unit & ef, x: Array[a, r]): Unit & ef and r = Array.foreach(f, x)
+    pub def forEach(f: a -> Unit & ef, x: Array[a, r]): Unit & ef and r = Array.forEach(f, x)
 }
 
 @test
@@ -85,5 +85,5 @@ instance Iterable2[r, a, MutList[a, r]] {
 
 
 pub def append!(m: c, v: MutList[a, r]): Unit \ { Read(r, r2), Write(r, r2) } with Iterable2[r2, a, c] = region reg {
-    m |> Iterable2.iterator(reg) |> Iterator.foreach(x -> MutList.push!(x, v))
+    m |> Iterable2.iterator(reg) |> Iterator.forEach(x -> MutList.push!(x, v))
 }
