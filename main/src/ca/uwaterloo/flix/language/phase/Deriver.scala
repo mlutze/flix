@@ -20,9 +20,8 @@ import ca.uwaterloo.flix.language.ast.Ast.BoundBy
 import ca.uwaterloo.flix.language.ast.Ast.VarText.FallbackText
 import ca.uwaterloo.flix.language.ast.{Ast, Kind, KindedAst, Name, Scheme, SemanticOperator, SourceLocation, Symbol, Type, TypeConstructor}
 import ca.uwaterloo.flix.language.errors.DerivationError
-import ca.uwaterloo.flix.language.errors.DerivationError._
 import ca.uwaterloo.flix.language.phase.util.PredefinedClasses
-import ca.uwaterloo.flix.util.Validation.{ToSuccess, ToFailure, sequence, traverse, flatMapN}
+import ca.uwaterloo.flix.util.Validation.{ToSuccess, sequence, traverse}
 import ca.uwaterloo.flix.util.{InternalCompilerException, Validation}
 
 /**
@@ -39,7 +38,7 @@ object Deriver {
     }).map(_.flatten)
 
     derivedInstances.map {
-      instances => 
+      instances =>
         val newInstances = instances.foldLeft(root.instances) {
           case (acc, inst) =>
             val accInsts = acc.getOrElse(inst.sym.clazz, Nil)
@@ -752,7 +751,7 @@ object Deriver {
         loc = loc
       ).toSuccess
   }
-  
+
   /**
     * Creates an Sendable instance for the given enum.
     *
@@ -769,7 +768,7 @@ object Deriver {
     * {{{
     * instance Sendable[E[a]] with Sendable[a]
     * }}}
-    * 
+    *
     * The instance is empty: we check for immutability by checking for the absence of region kinded type parameters.
     */
   private def mkSendableInstance(enum0: KindedAst.Enum, loc: SourceLocation, root: KindedAst.Root)(implicit flix: Flix): Validation[KindedAst.Instance, DerivationError] = enum0 match {
@@ -784,7 +783,7 @@ object Deriver {
         ann = Nil,
         mod = Ast.Modifiers.Empty,
         sym = sendableInstanceSym,
-        tpe = tpe,
+        tpes = List(tpe),
         tconstrs = tconstrs,
         defs = Nil,
         ns = Name.RootNS,
