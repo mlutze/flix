@@ -58,9 +58,9 @@ object Safety {
     val sendableClass = new Symbol.ClassSym(Nil, "Sendable", SourceLocation.Unknown)
 
     root.instances.getOrElse(sendableClass, Nil) flatMap {
-      case Instance(_, _, _, _, tpe, _, _, _, loc) =>
-        if (tpe.typeArguments.exists(_.kind == Kind.Bool))
-          List(SafetyError.SendableError(tpe, loc))
+      case Instance(_, _, _, _, tpes, _, _, _, loc) =>
+        if (tpes.head.typeArguments.exists(_.kind == Kind.Bool))
+          List(SafetyError.SendableError(tpes.head, loc))
         else
           Nil
     }
