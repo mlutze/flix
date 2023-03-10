@@ -68,9 +68,12 @@ Running local requires additional dependencies but does not have the weight of a
 
 ### Virtual Machine
 1. Run the VM
-2. Open VSCode (icon on the left)
-3. Open e.g. `src/colors.flix`.
-4. The Flix compiler should automatically start, using the jar in the project
+2. In case the user is logged out:
+  - Username: `flix`
+  - Password: `flix`
+3. Open VSCode (icon on the left)
+4. Open e.g. `src/colors.flix`.
+5. The Flix compiler should automatically start, using the jar in the project
    folder. Highlighting should now appear.
 
 ### Locally
