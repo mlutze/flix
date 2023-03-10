@@ -1,10 +1,10 @@
-restrictable enum Color[i] {
-    case Red
-    case Green
-    case Blue
-}
+mod Colors {
 
-mod Color {
+    pub restrictable enum Color[i] {
+        case Red
+        case Green
+        case Blue
+    }
 
     // To run this function press the floating "Run" button right below these
     // three lines. This can be done for any function that is `pub` and does not
@@ -19,7 +19,7 @@ mod Color {
         println("this is green: ${green}");
 
         // for the non-general functions we need to open red again
-        println("Is red warm? ${isWarm(open_as Color red)}, ${isWarmAlternative(open_as Color red)}, and ${Color.isWarmGeneral(red)}");
+        println("Is red warm? ${isWarm(open_as Color red)}, ${isWarmAlternative(open_as Color red)}, and ${isWarmGeneral(red)}");
 
         // to compare the two types, we need to open the type of red
         // (green is recreated to avoid propagating typing backwards but it
@@ -95,18 +95,18 @@ mod Color {
 
 // Type Class Instances
 
-instance ToString[Color[i]] {
-    pub def toString(x: Color[i]): String = choose x {
-        case Color.Red   => "Red"
-        case Color.Green => "Green"
-        case Color.Blue  => "Blue"
+instance ToString[Colors.Color[i]] {
+    pub def toString(x: Colors.Color[i]): String = choose x {
+        case Colors.Color.Red   => "Red"
+        case Colors.Color.Green => "Green"
+        case Colors.Color.Blue  => "Blue"
     }
 }
 
-instance Eq[Color[i]] {
-    pub def eq(x: Color[i], y: Color[i]): Bool = choose x {
-        case Color.Red   => Color.isRed(y)
-        case Color.Green => Color.isGreen(y)
-        case Color.Blue  => Color.isBlue(y)
+instance Eq[Colors.Color[i]] {
+    pub def eq(x: Colors.Color[i], y: Colors.Color[i]): Bool = choose x {
+        case Colors.Color.Red   => Colors.isRed(y)
+        case Colors.Color.Green => Colors.isGreen(y)
+        case Colors.Color.Blue  => Colors.isBlue(y)
     }
 }
