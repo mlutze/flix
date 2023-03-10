@@ -16,8 +16,8 @@ This artifact can either be run locally using `demo.zip` or on a VM with
 | File           | Explanation                                                                                              |
 |:---------------|:---------------------------------------------------------------------------------------------------------|
 | `README.md`    | This file, explaining this artifact                                                                      |
-| `demo.zip`     | A Flix project that can be run locally with Vscode with the dependencies listed in Artifact Requirements |
-| `variants.OVA` | A VM image the preinstalled requirements and the project in `demo.zip` already setup                     |
+| `demo.zip`     | A Flix project that can be run locally in VSCode with the dependencies listed in Artifact Requirements   |
+| `variants.OVA` | A VM image with the preinstalled requirements and the project in `demo.zip` already set up               |
 
 The `demo` Flix project has three flix files that represent case studies and
 examples from the paper:
@@ -30,7 +30,7 @@ examples from the paper:
 | `src/Seq.flix`              | _6.2 Option, List, and NonEmptyList_          |
 
 Each file is separate and contains a main function that shows some example usage
-and can be run via the vscode button shown above the function. The files are
+and can be run via the VSCode button shown above the function. The files are
 meant to be experimented on, either via the main function or modification to the
 other functions. Types and variant index bounds can be observed by hovering the
 mouse on expressions in a error-free program. The differences between the paper
@@ -45,11 +45,20 @@ a multitude of functions.
 
 ## Artifact Requirements
 
-The artifact VM contains all dependencies needed, but to run the project locally
-the requirements are:
+There are two ways to run the artifact,
+either through the VM or running on a local machine.
+The VM bundles all dependencies but is heavyweight.
+Running local requires additional dependencies but does not have the weight of a VM.
 
+
+### Option 1: Virtual Machine
+
+- VirtualBox or another virtual machine software capable of running OVA files.
+- The machine must be configured to use at least two CPU cores
+
+### Option 2: Local Installation
 - Java 11+ ([e.g. openjdk](https://jdk.java.net/java-se-ri/11))
-- [Vscode](https://code.visualstudio.com/download)
+- [VSCode](https://code.visualstudio.com/download)
   - [Flix Extension](https://marketplace.visualstudio.com/items?itemName=flix.flix)
 - At least two CPU-cores (because of a bug in the Flix compiler)
 
@@ -57,9 +66,9 @@ the requirements are:
 
 ## Getting Started
 
-### VM
+### Virtual Machine
 1. Run the VM
-2. The VM automatically opens the Vscode project (`~/demo/`)
+2. Open VSCode (icon on the left)
 3. Open e.g. `src/colors.flix`.
 4. The Flix compiler should automatically start, using the jar in the project
    folder. Highlighting should now appear.
@@ -72,7 +81,7 @@ the requirements are:
    folder. Highlighting should now appear.
 
 ### Flix Version Message
-The extension with report that Flix version x.y.z. has started, but (obviously)
+The extension with report that Flix version x.y.z. has started, but
 this is not version x.y.z, but rather a custom-built version of Flix for the
 purpose of artifact evaluation.
 
