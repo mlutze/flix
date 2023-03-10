@@ -22,7 +22,9 @@ mod Color {
         println("Is red warm? ${isWarm(open_as Color red)}, ${isWarmAlternative(open_as Color red)}, and ${Color.isWarmGeneral(red)}");
 
         // to compare the two types, we need to open the type of red
-        println("Are these two colors equal? ${(open_as Color red) == green}");
+        // (green is recreated to avoid propagating typing backwards but it
+        // can be reused.)
+        println("Are these two colors equal? ${(open_as Color red) == (open Color.Green)}");
 
         // lets look at the inferred type of isWarm
         let _isWarmLocal = c -> choose c {
@@ -36,7 +38,9 @@ mod Color {
         //     Lowerbound: {}
         //     Upperbound: {Blue, Red}
         // This shows the type on the first line, and since its a restrictable
-        // variant it also shows the lowerbound and upperbound of the index.
+        // variant it also shows the lowerbound and upperbound of the index
+        // (only in terms of constants, i.e. bounds that hold for all
+        // instantiations of variables).
 
         // Feel free to experiment some more in this file or move on to the
         // other files
