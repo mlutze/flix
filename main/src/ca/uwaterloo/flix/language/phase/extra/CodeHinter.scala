@@ -29,10 +29,11 @@ object CodeHinter {
     * Returns a collection of code quality hints for the given AST `root`.
     */
   def run(root: TypedAst.Root, sources: Set[String])(implicit flix: Flix, index: Index): List[CodeHint] = {
-    val classHints = root.classes.values.flatMap(visitClass(_)(root, index)).toList
-    val defsHints = root.defs.values.flatMap(visitDef(_)(root, flix)).toList
-    val enumsHints = root.enums.values.flatMap(visitEnum(_)(root, index)).toList
-    (classHints ++ defsHints ++ enumsHints).filter(include(_, sources))
+//    val classHints = root.classes.values.flatMap(visitClass(_)(root, index)).toList
+//    val defsHints = root.defs.values.flatMap(visitDef(_)(root, flix)).toList
+//    val enumsHints = root.enums.values.flatMap(visitEnum(_)(root, index)).toList
+//    (classHints ++ defsHints ++ enumsHints).filter(include(_, sources))
+    Nil // TODO HACK hints disabled
   }
 
   /**
