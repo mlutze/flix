@@ -6,27 +6,10 @@ permissions:
   contents: read
 
 jobs:
-  # Build the JAR once for all the community builds
-  build-jar:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out branch
-        uses: actions/checkout@v2
-      - name: Set up Java
-        uses: actions/setup-java@v1
-        with:
-          java-version: 17
-      - name: Build Flix JAR
-        run: ./gradlew jar
-      - name: Upload Flix JAR
-        uses: actions/upload-artifact@v3
-        with:
-          name: flix-jar
-          path: build/libs/flix.jar
+  # NB: depends on having a valid flix.jar file
 
   # Spawn a separate job per community build
   community-build:
-    needs: build-jar
     strategy:
       # collect all the failures
       fail-fast: false
