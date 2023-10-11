@@ -1,0 +1,24 @@
+name: Build JAR
+
+on: [workflow_call]
+
+permissions:
+  contents: read
+
+jobs:
+  build-jar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v2
+      - name: Set up Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 17
+      - name: Build Flix JAR
+        run: ./gradlew jar
+      - name: Upload Flix JAR
+        uses: actions/upload-artifact@v3
+        with:
+          name: flix-jar
+          path: build/libs/flix.jar

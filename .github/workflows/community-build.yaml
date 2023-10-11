@@ -1,14 +1,9 @@
 name: Community Build
 
-on: [pull_request]
+on: [workflow_call]
 
 permissions:
   contents: read
-
-# Cancel previous runs if the PR is updated
-concurrency:
-  cancel-in-progress: true
-  group: community-build-${{ github.ref }}
 
 jobs:
   # Build the JAR once for all the community builds
@@ -59,10 +54,12 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: ${{ matrix.repo }}
-      - name: Download Flix JAR
-        uses: actions/download-artifact@v3
+      - name: Download the community build JAR
+        uses: dawidd6/action-download-artifact@v2
         with:
           name: flix-jar
+          workflow: build-jar.yaml
+          workflow_conclusion: success
       - name: Build community project
         timeout-minutes: 10
         run: |

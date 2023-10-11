@@ -1,0 +1,18 @@
+name: Secondary PR Build
+
+on: [pull_request]
+
+permissions:
+  contents: read
+
+# Cancel previous runs if the PR is updated
+concurrency:
+  cancel-in-progress: true
+  group: on-pr-jar-${{ github.ref }}
+
+jobs:
+  build-jar:
+    uses: ./.github/workflows/build-jar.yaml
+  community-build:
+    needs: build-jar
+    uses: ./.github/workflows/community-build.yaml
