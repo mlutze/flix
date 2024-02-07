@@ -1,5 +1,13 @@
 mod Test.Dec.AssocEff {
 
+    eff Console {
+        pub def println(s: String): Unit
+    }
+
+    eff Time {
+        pub def getTime(): String
+    }
+
     ////////////////
     // Arithmetic //
     ////////////////
@@ -91,10 +99,6 @@ mod Test.Dec.AssocEff {
         pub def iterator(rc: Region[r], l: MutMap[k, v, r1]): Iterator[(k, v), r + r1, r] \ r + r1 = {
             MutMap.iterator(rc, l)
         }
-    }
-
-    eff Console {
-        pub def println(s: String): Unit
     }
 
     pub def serveDessert(): Unit \ {Console} = region rc {
@@ -212,6 +216,23 @@ mod Test.Dec.AssocEff {
 
     pub def testPrintLogger(): Unit \ IO = {
         let logger = PrintLogger.PrintLogger;
+        Logger.log("Hello, world!", logger)
+    }
+
+    enum TimestampedConsoleLogger {
+        case TimestampedConsoleLogger
+    }
+
+    instance Logger[TimestampedConsoleLogger] {
+        type Aef = { Console, Time }
+        pub def log(s: String, _x: TimestampedConsoleLogger): Unit \ { Console, Time } = {
+            let timestamp = do Time.getTime();
+            do Console.println("${timestamp}: ${s}")
+        }
+    }
+
+    pub def testTimestampedConsoleLogger(): Unit \ { Console, Time } = {
+        let logger = TimestampedConsoleLogger.TimestampedConsoleLogger;
         Logger.log("Hello, world!", logger)
     }
 }
