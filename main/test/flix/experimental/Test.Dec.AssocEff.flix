@@ -173,4 +173,45 @@ mod Test.Dec.AssocEff {
         let l2 = Iterator.toList(it);
         l1 == l2
     }
+
+    /////////////
+    // Logging //
+    /////////////
+
+    class Logger[a] {
+        type Aef: Eff
+        pub def log(s: String, x: a): Unit \ Logger.Aef[a]
+    }
+
+    enum ConsoleLogger {
+        case ConsoleLogger
+    }
+
+    instance Logger[ConsoleLogger] {
+        type Aef = Console
+        pub def log(s: String, _x: ConsoleLogger): Unit \ Console = {
+            do Console.println(s)
+        }
+    }
+
+    pub def testConsoleLogger(): Unit \ Console = {
+        let logger = ConsoleLogger.ConsoleLogger;
+        Logger.log("Hello, world!", logger)
+    }
+
+    enum PrintLogger {
+        case PrintLogger
+    }
+
+    instance Logger[PrintLogger] {
+        type Aef = IO
+        pub def log(s: String, _x: PrintLogger): Unit \ IO = {
+            println(s)
+        }
+    }
+
+    pub def testPrintLogger(): Unit \ IO = {
+        let logger = PrintLogger.PrintLogger;
+        Logger.log("Hello, world!", logger)
+    }
 }
