@@ -16,6 +16,7 @@
 package ca.uwaterloo.flix.language.phase.constraintgeneration
 
 import ca.uwaterloo.flix.language.ast.{Kind, Level, SourceLocation, Symbol, Type}
+import ca.uwaterloo.flix.language.phase.constraintgeneration.TypingConstraint.Provenance
 import ca.uwaterloo.flix.language.phase.unification.Substitution
 
 
@@ -58,6 +59,16 @@ sealed trait TypingConstraint {
   private def dotId: Int = System.identityHashCode(this)
 
   def loc: SourceLocation
+
+  def getBoolConstraints: List[TypingConstraint] = this match {
+    case TypingConstraint.Equality(tpe1, tpe2, prov) if tpe1.kind == Kind.Eff || tpe2.kind == Kind.Eff =>
+      List(this)
+    case TypingConstraint.Purification(sym, eff1, eff2, level, prov, nested) =>
+      TypingConstraint.Equality(eff1, eff2, Provenance.Match(eff1, eff2, SourceLocation.Unknown)) :: nested.flatMap(_.getBoolConstraints)
+
+    case TypingConstraint.Equality(tpe1, tpe2, prov) => Nil
+    case TypingConstraint.Class(sym, tpe, loc) => Nil
+  }
 }
 
 object TypingConstraint {

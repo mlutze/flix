@@ -140,7 +140,6 @@ object ConstraintResolution {
       if (sym.toString == "Test.Dec.AssocEff.avg") {
         //        startLogging()
       }
-      log(sym)
 
 
       val initialSubst = fparams.foldLeft(Substitution.empty) {
@@ -160,6 +159,9 @@ object ConstraintResolution {
       val tpeConstr = TypingConstraint.Equality(tpe, infTpe, Provenance.ExpectType(expected = tpe, actual = infTpe, loc))
       val effConstr = TypingConstraint.Equality(eff, infEff, Provenance.ExpectEffect(expected = eff, actual = infEff, loc))
       val constrs = tpeConstr :: effConstr :: infConstrs
+      println("===========")
+      println(sym)
+      constrs.flatMap(_.getBoolConstraints).foreach(println)
       resolve(constrs, renv, cenv, eqEnv, initialSubst).flatMap {
         case ReductionResult(_, subst, _, deferred, progress) =>
           stopLogging()
@@ -180,7 +182,6 @@ object ConstraintResolution {
       if (sym.name == "Fixpoint.Ast.Datalog.toString$30158") {
         startLogging()
       }
-      log(sym)
 
       val initialSubst = fparams.foldLeft(Substitution.empty) {
         case (acc, KindedAst.FormalParam(sym, mod, tpe, src, loc)) => acc ++ Substitution.singleton(sym.tvar.sym, tpe)
@@ -464,9 +465,6 @@ object ConstraintResolution {
 
       count += 1
       recordGraph(TypingConstraint.toDotWithSubst(curr, subst), count)
-      log(
-        count.toString + "\n" + TypingConstraint.toDotWithSubst(curr, subst) + "\n" + "========================================="
-      )
 
       last = curr
       reduceAll3(curr, renv, cenv, eqEnv, subst) match {
@@ -475,9 +473,6 @@ object ConstraintResolution {
           subst = newSubst
           prog = progress
         case res@Result.Err(_) =>
-          subst.m.toList.sortBy(_._1).foreach {
-            case pair => log(pair); log(pair._1.level)
-          }
           stopLogging()
           return res
       }
