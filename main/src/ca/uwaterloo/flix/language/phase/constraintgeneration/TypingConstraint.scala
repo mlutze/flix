@@ -15,7 +15,8 @@
  */
 package ca.uwaterloo.flix.language.phase.constraintgeneration
 
-import ca.uwaterloo.flix.language.ast.{Kind, Level, SourceLocation, Symbol, Type}
+import ca.uwaterloo.flix.language.ast.{Kind, Level, RigidityEnv, SourceLocation, Symbol, Type, TypeConstructor}
+import ca.uwaterloo.flix.language.fmt.SimpleType
 import ca.uwaterloo.flix.language.phase.constraintgeneration.TypingConstraint.Provenance
 import ca.uwaterloo.flix.language.phase.unification.Substitution
 
@@ -68,6 +69,19 @@ sealed trait TypingConstraint {
 
     case TypingConstraint.Equality(tpe1, tpe2, prov) => Nil
     case TypingConstraint.Class(sym, tpe, loc) => Nil
+  }
+
+  def typeToString(t: Type, renv: RigidityEnv): String = t match {
+    case Type.Var(sym, loc) if renv.isRigid(sym) => s"Const(${sym.id})"
+    case Type.Cst(TypeConstructor.Effect(sym), loc) => s"Const(${sym.hashCode})"
+    case Type.Cst(TypeConstructor.Pure, _) => "Pure"
+    case Type.Cst(TypeConstructor.Univ, _) => "Univ"
+    case Type.Apply(Type.Apply(Type.Cst(TypeConstructor.Union, _), tpe1, _), tpe2, loc) =>
+      s"${typeToString(tpe1, renv)} + "
+    case Type.Apply(Type.Apply(Type.Cst(TypeConstructor.Intersection, _), tpe1, _), tpe2, loc) => ???
+    case Type.Apply(Type.Apply(Type.Cst(TypeConstructor.Complement, _), tpe1, _), tpe2, loc) => ???
+    case Type.Alias(cst, args, tpe, loc) => ???
+    case Type.AssocType(cst, arg, kind, loc) => ???
   }
 }
 

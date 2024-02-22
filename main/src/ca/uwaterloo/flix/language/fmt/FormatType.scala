@@ -224,6 +224,7 @@ object FormatType {
       * Converts the given `tpe0` to a string.
       */
     def visit(tpe0: SimpleType, mode: Mode): String = tpe0 match {
+      case SimpleType.Cst(id) => s"Cst($id)"
       case SimpleType.Hole => "?"
       case SimpleType.Void => "Void"
       case SimpleType.AnyType => "AnyType"
