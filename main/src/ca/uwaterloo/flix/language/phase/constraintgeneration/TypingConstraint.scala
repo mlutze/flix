@@ -35,7 +35,7 @@ sealed trait TypingConstraint {
   }
 
   override def toString: String = this match {
-    case TypingConstraint.Equality(tpe1, tpe2, prov) => s"$tpe1 ~ $tpe2"
+    case TypingConstraint.Equality(tpe1, tpe2, prov) => s"($tpe1) ~ ($tpe2)"
     case TypingConstraint.Class(sym, tpe, loc) => s"$sym[$tpe]"
     case TypingConstraint.Purification(sym, eff1, eff2, level, prov, nested) => s"$eff1 ~ ($eff2)[$sym ↦ Pure] ∧ $nested"
   }

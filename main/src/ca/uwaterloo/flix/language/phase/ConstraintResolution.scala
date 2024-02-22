@@ -161,7 +161,7 @@ object ConstraintResolution {
       val constrs = tpeConstr :: effConstr :: infConstrs
       println("===========")
       println(sym)
-      constrs.flatMap(_.getBoolConstraints).foreach(println)
+      println(constrs.flatMap(_.getBoolConstraints).mkString(",\n"))
       resolve(constrs, renv, cenv, eqEnv, initialSubst).flatMap {
         case ReductionResult(_, subst, _, deferred, progress) =>
           stopLogging()

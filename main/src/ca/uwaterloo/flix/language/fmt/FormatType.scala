@@ -292,16 +292,16 @@ object FormatType {
       case SimpleType.Or(tpes) =>
         val strings = tpes.map(delimit(_, mode))
         strings.mkString(" or ")
-      case SimpleType.Complement(tpe) => s"~${delimit(tpe, mode)}"
+      case SimpleType.Complement(tpe) => s"Not(${visit(tpe, mode)})"
       case SimpleType.Union(tpes) =>
         val strings = tpes.map(visit(_, mode))
         strings.mkString("{", ", ", "}")
       case SimpleType.Plus(tpes) =>
         val strings = tpes.map(delimit(_, mode))
-        strings.mkString(" + ")
+        strings.mkString(" & ")
       case SimpleType.Intersection(tpes) =>
         val strings = tpes.map(delimit(_, mode))
-        strings.mkString(" & ")
+        strings.mkString(" | ")
       case SimpleType.Difference(tpe1, tpe2) => s"${delimit(tpe1, mode)} - ${delimit(tpe2, mode)}"
       case SimpleType.RelationConstructor => "Relation"
       case SimpleType.Relation(tpes) =>
@@ -328,31 +328,32 @@ object FormatType {
         val strings = tpes.map(visit(_, Mode.Type))
         string + strings.mkString("[", ", ", "]")
       case SimpleType.Var(id, kind, isRegion, text) =>
-        val prefix: String = kind match {
-          case Kind.Wild => "_" + id.toString
-          case Kind.WildCaseSet => "_c" + id.toString
-          case Kind.Star => "t" + id
-          case Kind.Eff => "e" + id
-          case Kind.Bool => "b" + id
-          case Kind.RecordRow => "r" + id
-          case Kind.SchemaRow => "s" + id
-          case Kind.Predicate => "'" + id.toString
-          case Kind.CaseSet(_) => "c" + id.toString
-          case Kind.Arrow(_, _) => "'" + id.toString
-        }
-        val suffix = if (isRegion) {
-          "!"
-        } else {
-          ""
-        }
-        val string = prefix + suffix
-        fmt.varNames match {
-          case FormatOptions.VarName.IdBased => string
-          case FormatOptions.VarName.NameBased => text match {
-            case VarText.Absent => string
-            case VarText.SourceText(s) => s
-          }
-        }
+//        val prefix: String = kind match {
+//          case Kind.Wild => "_" + id.toString
+//          case Kind.WildCaseSet => "_c" + id.toString
+//          case Kind.Star => "t" + id
+//          case Kind.Eff => "e" + id
+//          case Kind.Bool => "b" + id
+//          case Kind.RecordRow => "r" + id
+//          case Kind.SchemaRow => "s" + id
+//          case Kind.Predicate => "'" + id.toString
+//          case Kind.CaseSet(_) => "c" + id.toString
+//          case Kind.Arrow(_, _) => "'" + id.toString
+//        }
+//        val suffix = if (isRegion) {
+//          "!"
+//        } else {
+//          ""
+//        }
+//        val string = prefix + suffix
+//        fmt.varNames match {
+//          case FormatOptions.VarName.IdBased => string
+//          case FormatOptions.VarName.NameBased => text match {
+//            case VarText.Absent => string
+//            case VarText.SourceText(s) => s
+//          }
+//        }
+      s"Var($id)"
 
       case SimpleType.Tuple(elms) =>
         elms.map(visit(_, Mode.Type)).mkString("(", ", ", ")")
