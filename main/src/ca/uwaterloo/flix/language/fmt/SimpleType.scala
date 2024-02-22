@@ -242,9 +242,6 @@ object SimpleType {
   //////////////////////
   // Miscellaneous Types
   //////////////////////
-
-  case class Cst(id: Int) extends SimpleType
-
   /**
     * A simple named type (e.g., enum or type alias).
     */
