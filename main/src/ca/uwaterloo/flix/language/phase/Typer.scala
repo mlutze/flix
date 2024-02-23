@@ -43,6 +43,18 @@ object Typer {
     val typeAliases = visitTypeAliases(root)
     val precedenceGraph = LabelledPrecedenceGraph.empty
 
+    ConstraintResolution.things.toList.sortBy {
+      case (sym, renv, constrs) => constrs.map {
+        case constr => constr.numVars
+      }.sum
+    }.reverse.foreach {
+      case (sym, renv, constrs) =>
+        println("=============")
+        println(sym)
+        println(constrs.flatMap(_.getBoolConstraints).map(_.specialToString(renv)).mkString(",\n"))
+    }
+
+
     mapN(classesVal, instancesVal, defsVal) {
       case (classes, instances, defs) =>
         val sigs = classes.values.flatMap(_.sigs).map(sig => sig.sym -> sig).toMap

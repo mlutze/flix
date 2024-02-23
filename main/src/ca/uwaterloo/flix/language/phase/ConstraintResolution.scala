@@ -29,8 +29,11 @@ import ca.uwaterloo.flix.util.{InternalCompilerException, Result, Validation}
 
 import java.nio.file.{Files, Path}
 import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
 
 object ConstraintResolution {
+
+  val things: ListBuffer[(Symbol.DefnSym, RigidityEnv, List[TypingConstraint])] = ListBuffer()
 
   private val MaxIterations = 1000
 
@@ -159,9 +162,10 @@ object ConstraintResolution {
       val tpeConstr = TypingConstraint.Equality(tpe, infTpe, Provenance.ExpectType(expected = tpe, actual = infTpe, loc))
       val effConstr = TypingConstraint.Equality(eff, infEff, Provenance.ExpectEffect(expected = eff, actual = infEff, loc))
       val constrs = tpeConstr :: effConstr :: infConstrs
-      println("===========")
-      println(sym)
-      println(constrs.flatMap(_.getBoolConstraints).map(_.specialToString(renv)).mkString(",\n"))
+      things.addOne((sym, renv, constrs.flatMap(_.getBoolConstraints)))
+//      println("===========")
+//      println(sym)
+//      println(constrs.flatMap(_.getBoolConstraints).map(_.specialToString(renv)).mkString(",\n"))
       resolve(constrs, renv, cenv, eqEnv, initialSubst).flatMap {
         case ReductionResult(_, subst, _, deferred, progress) =>
           stopLogging()
