@@ -87,7 +87,7 @@ sealed trait TypingConstraint {
       s"Not(${typeToString(tpe1, renv)})"
     case Type.Apply(tpe1, tpe2, loc) => throw InternalCompilerException("unexpected type", loc)
     case Type.Alias(cst, args, tpe, loc) => throw InternalCompilerException("unexpected type", loc)
-    case Type.AssocType(cst, arg, kind, loc) => throw InternalCompilerException("unexpected type", loc)
+    case Type.AssocType(cst, arg, kind, loc) => "<Associated Type>"
   }
 
   def specialToString(renv: RigidityEnv): String = this match {
