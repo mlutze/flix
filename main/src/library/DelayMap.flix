@@ -71,7 +71,7 @@ mod DelayMap {
     /// Returns a string representation of the given `DelayMap` `m`.
     ///
     @Experimental
-    pub def toString(m: DelayMap[k, v]): String with ToString[k], ToString[v] = region rc {
+    pub def toString(m: DelayMap[k, v]): String \ ToString.Aef[k] + ToString.Aef[v] with ToString[k], ToString[v] = region rc {
         let sb = StringBuilder.empty(rc);
         let _ = parallelForce(m);
         StringBuilder.appendString!("DelayMap#{", sb);
