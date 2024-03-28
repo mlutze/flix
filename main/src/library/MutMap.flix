@@ -574,20 +574,16 @@ mod MutMap {
     ///
     pub def iterator(rc: Region[r1], m: MutMap[k, v, r2]): Iterator[(k, v), r1 + r2, r1] \ r1 =
         let MutMap(_, mm) = m;
-<<<<<<< HEAD
-        Map.iterator(rc, deref mm) |> Iterator.map(x -> { discard deref mm; x })
-=======
         let iterOptRef = ref None @ rc;
         let next = () -> {
             let iter = match deref iterOptRef {
                 case None => Map.iterator(rc, deref mm)
                 case Some(x) => x
             };
-            iterOptRef := Some(iter);
+            Ref.put(Some(iter), iterOptRef);
             Iterator.next(iter)
         };
         Iterator.iterate(rc, next)
->>>>>>> f9139ec5d (squish)
 
     ///
     /// Returns an iterator over keys in `m`.
