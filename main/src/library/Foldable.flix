@@ -128,7 +128,7 @@ pub trait Foldable[t : Type] {
     ///
     /// Returns true if and only if `t` is non-empty.
     ///
-    pub def nonEmpty(t: t[a]): Bool = not Foldable.isEmpty(t)
+    pub def nonEmpty(t: t): Bool \ Foldable.Aef[t] = not Foldable.isEmpty(t)
 
     ///
     /// Returns `true` if and only if the element `x` is in `t`.

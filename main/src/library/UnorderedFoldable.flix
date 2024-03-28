@@ -44,7 +44,7 @@ pub trait UnorderedFoldable[t : Type] {
     ///
     /// Returns true if and only if `t` is non-empty.
     ///
-    pub def nonEmpty(t: t[a]): Bool = not UnorderedFoldable.isEmpty(t)
+    pub def nonEmpty(t: t): Bool \ UnorderedFoldable.Aef[t] = not UnorderedFoldable.isEmpty(t)
 
     ///
     /// Returns `true` if and only if at least one element in `t` satisfies the predicate `f`.
