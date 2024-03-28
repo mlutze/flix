@@ -48,11 +48,25 @@ mod Test.Dec.AssocEff {
     @Test
     pub def testAvg(): Bool = avg(List#{1, 2, 3}) == 2
 
+<<<<<<< HEAD
+=======
+//    // MATT ???
+//    pub def apply(f: a -> b, x: a): b = f(x)
+//
+//    pub def divSelf(x: a): a with Div[a] = {
+//        apply(apply(Div.div, x), x)
+//    }
+
+>>>>>>> f9139ec5d (squish)
     //////////////
     // Iterator //
     //////////////
 
+<<<<<<< HEAD
     trait Iterable[t: Type] {
+=======
+    class Iterable[t: Type] {
+>>>>>>> f9139ec5d (squish)
         type Elm: Type
         type Aef: Eff
         pub def iterator(rc: Region[r], t: t): Iterator[Iterable.Elm[t], r + Iterable.Aef[t], r] \ r + Iterable.Aef[t]
@@ -96,14 +110,22 @@ mod Test.Dec.AssocEff {
 
     pub def serveDessert(): Unit \ {Console} = region rc {
         let fruits = List#{"Apple", "Peach", "Mango"};
+<<<<<<< HEAD
         let creams = MutList.empty(rc);
+=======
+        let creams = MutList.new(rc);
+>>>>>>> f9139ec5d (squish)
         MutList.push!("Caramel", creams);
         MutList.push!("Vanilla", creams);
         foreach(fruit <- fruits; cream <- creams)
             do Console.println("${fruit} topped with ${cream}")
     }
 
+<<<<<<< HEAD
     trait DeepIterable[a] {
+=======
+    class DeepIterable[a] {
+>>>>>>> f9139ec5d (squish)
         type Elm
         type Aef: Eff
         pub def iterator(rc: Region[r], x: a): Iterator[DeepIterable.Elm[a], r + DeepIterable.Aef[a], r] \ r + DeepIterable.Aef[a]
@@ -132,7 +154,11 @@ mod Test.Dec.AssocEff {
         type Aef = DeepIterable.Aef[a]
         pub def iterator(rc: Region[r], x: List[a]): Iterator[DeepIterable.Elm[a], r + DeepIterable.Aef[a], r] \ r + DeepIterable.Aef[a] = {
             // this is needed because the nested Aef isn't actually executed when we flatMap
+<<<<<<< HEAD
             let _ = (checked_ecast(123): _ \ DeepIterable.Aef[a]);
+=======
+            let _ = checked_ecast(123): _ \ DeepIterable.Aef[a];
+>>>>>>> f9139ec5d (squish)
             List.iterator(rc, x) |> Iterator.flatMap(DeepIterable.iterator(rc))
 
         }
@@ -176,7 +202,11 @@ mod Test.Dec.AssocEff {
     // Logging //
     /////////////
 
+<<<<<<< HEAD
     trait Logger[a] {
+=======
+    class Logger[a] {
+>>>>>>> f9139ec5d (squish)
         type Aef: Eff
         pub def log(s: String, x: a): Unit \ Logger.Aef[a]
     }

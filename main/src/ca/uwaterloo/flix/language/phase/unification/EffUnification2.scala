@@ -18,9 +18,8 @@ package ca.uwaterloo.flix.language.phase.unification
 import ca.uwaterloo.flix.api.Flix
 import ca.uwaterloo.flix.language.ast.{Rigidity, RigidityEnv, SourceLocation, Symbol, Type, TypeConstructor}
 import ca.uwaterloo.flix.language.phase.unification.FastBoolUnification.{ConflictException, Equation, Term, TooComplexException}
-import ca.uwaterloo.flix.language.phase.unification.UnificationError.TooComplex
-import ca.uwaterloo.flix.util.{InternalCompilerException, Result}
 import ca.uwaterloo.flix.util.collection.Bimap
+import ca.uwaterloo.flix.util.{InternalCompilerException, Result}
 
 import scala.collection.mutable
 

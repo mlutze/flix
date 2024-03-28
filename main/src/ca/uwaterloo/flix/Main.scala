@@ -105,7 +105,9 @@ object Main {
       xparser = cmdOpts.xparser,
       xprinttyper = cmdOpts.xprinttyper,
       XPerfFrontend = cmdOpts.XPerfFrontend,
-      XPerfN = cmdOpts.XPerfN
+      XPerfN = cmdOpts.XPerfN,
+      xtyper = cmdOpts.xtyper,
+      xprintconstraints = cmdOpts.xprintconstraints,
     )
 
     // Don't use progress bar if benchmarking.
@@ -365,6 +367,8 @@ object Main {
                      xprinttyper: Option[String] = None,
                      XPerfN: Option[Int] = None,
                      XPerfFrontend: Boolean = false,
+                     xtyper: Boolean = false,
+                     xprintconstraints: Boolean = false,
                      files: Seq[File] = Seq())
 
   /**
