@@ -40,7 +40,7 @@ object ClassEnvironment {
       Validation.success(())
     } else {
       // Case 2: there is an instance matching tconstr and all of the instance's constraints are entailed by tconstrs0
-      Validation.flatMapN(byInst(tconstr, classEnv, renv)) {
+      Validation.flatMapN(byInst(tconstr, classEnv)) {
         case tconstrs => Validation.sequenceX(tconstrs.map(entail(tconstrs0, _, classEnv, renv)))
       }
     }
@@ -58,7 +58,7 @@ object ClassEnvironment {
     * Returns true iff the given type constraint holds under the given class environment.
     */
   def holds(tconstr: Ast.TypeConstraint, classEnv: Map[Symbol.ClassSym, Ast.ClassContext], renv: RigidityEnv)(implicit flix: Flix): Boolean = {
-    byInst(tconstr, classEnv, renv).toHardResult match {
+    byInst(tconstr, classEnv).toHardResult match {
       case Result.Ok(_) => true
       case Result.Err(_) => false
     }
@@ -102,7 +102,7 @@ object ClassEnvironment {
     if (isHeadNormalForm(tconstr.arg)) {
       Validation.success(List(tconstr))
     } else {
-      byInst(tconstr, classEnv, renv)
+      byInst(tconstr, classEnv)
     }
   }
 
