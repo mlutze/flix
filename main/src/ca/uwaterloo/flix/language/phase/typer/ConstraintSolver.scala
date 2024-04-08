@@ -96,7 +96,7 @@ object ConstraintSolver {
       // 1. constraints from the context (e.g. constraints on instances and classes, plus global constraints)
       // 2. constraints from the function signature
       val cenv = expandClassEnv(cenv0, tconstrs ++ tconstrs0)
-      val eenv = expandEqualityEnv(eqEnv0, econstrs) // TODO ASSOC-TYPES allow econstrs on instances
+      val eenv = expandEqualityEnv(eqEnv0, econstrs)
 
       // We add extra constraints for the declared type and effect
       val declaredTpeConstr = TypeConstraint.Equality(tpe, infTpe, Provenance.ExpectType(expected = tpe, actual = infTpe, loc))
@@ -112,7 +112,6 @@ object ConstraintSolver {
           Debug.stopRecording()
 
           // If there are any constraints we could not resolve, then we report an error.
-          // TODO ASSOC-TYPES here we only consider the first error
           getFirstError(deferred, renv) match {
             case None => Result.Ok(subst)
             case Some(err) => Result.Err(err)
@@ -657,9 +656,6 @@ object ConstraintSolver {
     *     - ?
     *       - (other cases should be impossible on this branch)
     */
-  // TODO ASSOC-TYPES This translation does not work well
-  // TODO ASSOC-TYPES because provenance is not propogated properly.
-  // TODO ASSOC-TYPES We also need to track the renv for use in these errors.
   private def toTypeError(err0: UnificationError, prov: Provenance)(implicit flix: Flix): TypeError = (err0, prov) match {
     case (err, Provenance.ExpectType(expected, actual, loc)) =>
       toTypeError(err, Provenance.Match(expected, actual, loc)) match {
@@ -676,7 +672,6 @@ object ConstraintSolver {
     case (err, Provenance.ExpectEffect(expected, actual, loc)) =>
       toTypeError(err, Provenance.Match(expected, actual, loc)) match {
         case TypeError.MismatchedEffects(baseType1, baseType2, fullType1, fullType2, renv, _) =>
-          // TODO ASSOC-TYPES restore possible upcast error
           TypeError.UnexpectedEffect(baseType1, baseType2, renv, loc)
         case e => e
       }
@@ -735,7 +730,6 @@ object ConstraintSolver {
     case (UnificationError.NoMatchingInstance(tconstr), Provenance.Match(type1, type2, loc)) =>
       TypeError.MissingInstance(tconstr.head.sym, tconstr.arg, RigidityEnv.empty, loc)
 
-    // TODO ASSOC-TYPES these errors are relics of the old type system and should be removed
     case (UnificationError.UnsupportedEquality(t1, t2), _) => throw InternalCompilerException("unexpected error: " + err0, SourceLocation.Unknown)
     case (UnificationError.IrreducibleAssocType(sym, t), _) => throw InternalCompilerException("unexpected error: " + err0, SourceLocation.Unknown)
   }
