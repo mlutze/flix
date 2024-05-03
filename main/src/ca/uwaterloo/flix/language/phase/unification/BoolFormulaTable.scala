@@ -61,7 +61,7 @@ object BoolFormulaTable {
   /**
     * The size a formula (but represented as a type) must have before we try to minimize it.
     */
-  val Threshold: Int = 10
+  val Threshold: Int = 0
 
   /**
     * A Boolean variable is represented by a unique number.

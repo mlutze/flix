@@ -1,28 +1,34 @@
 package ca.uwaterloo.flix.language.phase
 
+import ca.uwaterloo.flix.api.Flix
 import ca.uwaterloo.flix.language.ast.TypedAst.{Def, Expr, Root}
 import ca.uwaterloo.flix.language.ast.{SourceLocation, Symbol, Type}
+import ca.uwaterloo.flix.language.phase.unification.TypeMinimization
 import ca.uwaterloo.flix.util.collection.Chain
 
+import scala.collection.immutable.SortedSet
+
 object EffectVerifier {
-  def run(root: Root): Unit = {
+  def run(root: Root)(implicit flix: Flix): Unit = {
     root.defs.foreach {
       case (sym, defn) => visitDef(defn)
     }
   }
 
-  def visitDef(defn: Def): Unit = {
+  def visitDef(defn: Def)(implicit flix: Flix): Unit = {
     val boundVars = defn.spec.tparams.map(_.sym).toSet
     for {
-      (tpe, loc) <- findFreeVars(defn.exp)(boundVars).toSeq
+      (freeVars, tpe, loc) <- findFreeVars(defn.exp)(boundVars, flix).toSeq
     } {
-      println(defn.sym.toString + " @ " + loc.toString + " : " + tpe)
+      println(defn.sym.toString + " @ " + loc.toString + " : " + freeVars + " in " + tpe)
     }
   }
 
-  def findFreeVars(exp0: Expr)(implicit boundVars: Set[Symbol.KindedTypeVarSym]): Chain[(Type, SourceLocation)] = {
-    val head = if (exp0.tpe.typeVars.exists { t => !boundVars.contains(t.sym) }) {
-      Chain((exp0.tpe, exp0.loc))
+  def findFreeVars(exp0: Expr)(implicit boundVars: Set[Symbol.KindedTypeVarSym], flix: Flix): Chain[(SortedSet[Type.Var], Type, SourceLocation)] = {
+    val tpe0 = TypeMinimization.minimizeType(exp0.tpe)
+    val freeVars = tpe0.typeVars.filter { t => !boundVars.contains(t.sym) && !t.sym.isRegion }
+    val head = if (freeVars.nonEmpty) {
+      Chain((freeVars, tpe0, exp0.loc))
     } else {
       Chain()
     }
@@ -42,7 +48,7 @@ object EffectVerifier {
       case Expr.Let(sym, mod, exp1, exp2, tpe, eff, loc) => findFreeVars(exp1) ++ findFreeVars(exp2)
       case Expr.LetRec(sym, ann, mod, exp1, exp2, tpe, eff, loc) => findFreeVars(exp1) ++ findFreeVars(exp2)
       case Expr.Region(tpe, loc) => Chain.empty
-      case Expr.Scope(sym, regionVar, exp, tpe, eff, loc) => findFreeVars(exp)(boundVars + regionVar.sym)
+      case Expr.Scope(sym, regionVar, exp, tpe, eff, loc) => findFreeVars(exp)(boundVars + regionVar.sym, flix)
       case Expr.IfThenElse(exp1, exp2, exp3, tpe, eff, loc) => findFreeVars(exp1) ++ findFreeVars(exp2) ++ findFreeVars(exp3)
       case Expr.Stm(exp1, exp2, tpe, eff, loc) => findFreeVars(exp1) ++ findFreeVars(exp2)
       case Expr.Discard(exp, eff, loc) => findFreeVars(exp)
