@@ -1,4 +1,4 @@
-name: Community Build
+name: Format Tests
 
 on: [pull_request, merge_group]
 
@@ -21,7 +21,7 @@ jobs:
         run: |
           curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
           chmod +x cs
-          ./cs setup
+          ./cs setup --yes
           cs install scalafmt
       - name: Run formatter
         run: scalafmt --test --non-interactive
