@@ -20,8 +20,8 @@ jobs:
         run: |
           curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
           chmod +x cs
-          ./cs --help
-          ./cs setup --yes
+          ./cs install scalafmt
       - name: Run scalafmt
-        run: scalafmt --test --non-interactive
+        run: |
+          scalafmt --test --non-interactive
 
