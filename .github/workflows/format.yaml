@@ -23,5 +23,5 @@ jobs:
           ./cs install scalafmt
       - name: Run scalafmt
         run: |
-          scalafmt --test --non-interactive
+          ~/.local/share/coursier/bin/scalafmt --test --non-interactive
 
