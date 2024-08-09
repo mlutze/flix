@@ -1,0 +1,27 @@
+name: Format Tests
+
+on: [pull_request, merge_group]
+
+permissions:
+  contents: read
+
+# Cancel previous runs if the PR is updated
+concurrency:
+  cancel-in-progress: true
+  group: format-${{ github.ref }}
+
+jobs:
+  check-format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+      - name: Install Coursier
+        run: |
+          curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
+          chmod +x cs
+          ./cs install scalafmt
+      - name: Run scalafmt
+        run: |
+          ~/.local/share/coursier/bin/scalafmt --test --non-interactive
+
