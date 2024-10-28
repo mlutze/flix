@@ -25,6 +25,7 @@ import ca.uwaterloo.flix.language.dbg.AstPrinter.*
 import ca.uwaterloo.flix.language.errors.KindError
 import ca.uwaterloo.flix.language.phase.unification.EqualityEnvironment
 import ca.uwaterloo.flix.language.phase.unification.KindUnification.unify
+import ca.uwaterloo.flix.util.collection.MapOps
 import ca.uwaterloo.flix.util.{InternalCompilerException, ParOps, Validation}
 
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -75,13 +76,60 @@ object Kinder {
 
     val defs = visitDefs(root, taenv, oldRoot, changeSet)
 
-    val instances = ParOps.parMapValues(root.instances)(_.map(visitInstance(_, taenv, root)))
+    val instances0 = ParOps.parMapValues(root.instances)(_.map(visitInstance(_, taenv, root)))
+    val instances = reaggregateInstanceMap(instances0)
 
     val effects = ParOps.parMapValues(root.effects)(visitEffect(_, taenv, root))
 
     val newRoot = KindedAst.Root(traits, instances, defs, enums, structs, restrictableEnums, effects, taenv, root.uses, root.entryPoint, root.sources, root.names)
 
     (newRoot, sctx.errors.asScala.toList)
+  }
+
+  /**
+    * Rearranges the instances so that they can be looked up by type constructor.
+    */
+  private def reaggregateInstanceMap(instances: Map[Symbol.TraitSym, List[KindedAst.Instance]])(implicit sctx: SharedContext, flix: Flix): Map[Symbol.TraitSym, Map[TypeConstructor, KindedAst.Instance]] = {
+    instances.map {
+      case (sym, insts) => sym -> reaggregateInstanceList(sym, insts)
+    }
+  }
+
+  /**
+    * Rearranges the instances so that they can be looked up by type constructor.
+    */
+  private def reaggregateInstanceList(sym: Symbol.TraitSym, insts: List[KindedAst.Instance])(implicit sctx: SharedContext, flix: Flix): Map[TypeConstructor, KindedAst.Instance] = {
+    insts.foldLeft(Map.empty[TypeConstructor, KindedAst.Instance]) {
+      case (acc, inst) =>
+        getValidTypeConstructor(inst.tpe) match {
+          case None =>
+            sctx.errors.add(KindError.ComplexInstance(inst.tpe, sym, inst.trt.loc))
+            acc // Ignore. Error already issued.
+          case Some(tc) =>
+            acc.get(tc) match {
+              case Some(otherInst) =>
+                sctx.errors.add(KindError.OverlappingInstances(sym, otherInst.trt.loc, inst.trt.loc))
+                acc
+              case None => acc + (tc -> inst)
+            }
+        }
+    }
+  }
+
+  /**
+    * Returns the type's constructor if it is a valid type for an instance.
+    *
+    * Returns None if the type constructor is invalid.
+    */
+  private def getValidTypeConstructor(t: Type): Option[TypeConstructor] = t match {
+    case _: Type.Var => None
+    case Type.Cst(tc, _) => Some(tc)
+    case Type.Apply(tpe1, _, _) => getValidTypeConstructor(tpe1)
+    case _: Type.Alias => None
+    case _: Type.AssocType => None
+    case _: Type.JvmToType => None
+    case _: Type.JvmToEff => None
+    case _: Type.UnresolvedJvmType => None
   }
 
   /**

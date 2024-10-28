@@ -119,8 +119,8 @@ object TypedAstOps {
     */
   def instanceDefsOf(root: Root): Iterable[Def] = {
     for {
-      instsPerClass <- root.instances.values
-      inst <- instsPerClass
+      instsPerTrait <- root.instances.values
+      inst <- instsPerTrait.values
       defn <- inst.defs
     } yield defn
   }

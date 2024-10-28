@@ -173,7 +173,7 @@ object Visitor {
 
     root.enums.values.foreach(visitEnum)
 
-    root.instances.values.flatten.foreach(visitInstance)
+    root.instances.values.flatMap(_.values).foreach(visitInstance)
 
     root.sigs.values.foreach(visitSig)
 

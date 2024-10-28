@@ -15,9 +15,11 @@
  */
 package ca.uwaterloo.flix.language.errors
 
+import ca.uwaterloo.flix.api.Flix
 import ca.uwaterloo.flix.language.CompilationMessage
-import ca.uwaterloo.flix.language.ast.{Kind, SourceLocation}
+import ca.uwaterloo.flix.language.ast.{Kind, SourceLocation, Symbol, Type}
 import ca.uwaterloo.flix.language.fmt.FormatKind.formatKind
+import ca.uwaterloo.flix.language.fmt.FormatType
 import ca.uwaterloo.flix.util.Formatter
 
 /**
@@ -94,5 +96,54 @@ object KindError {
       import formatter.*
       s"${underline("Tip: ")} Add a kind annotation."
     })
+  }
+
+  /**
+    * Error indicating that the types of two instances overlap.
+    *
+    * @param sym  the trait symbol.
+    * @param loc1 the location of the first instance.
+    * @param loc2 the location of the second instance.
+    */
+  case class OverlappingInstances(sym: Symbol.TraitSym, loc1: SourceLocation, loc2: SourceLocation) extends KindError with Recoverable {
+    def summary: String = "Overlapping instances."
+
+    def message(formatter: Formatter): String = {
+      import formatter.*
+      s""">> Overlapping instances for '${magenta(sym.name)}'.
+         |
+         |${code(loc1, "the first instance was declared here.")}
+         |
+         |${code(loc2, "the second instance was declared here.")}
+         |""".stripMargin
+    }
+
+    override def explain(formatter: Formatter): Option[String] = Some({
+      import formatter.*
+      s"${underline("Tip: ")} Remove or change the type of one of the instances."
+    })
+
+    def loc: SourceLocation = loc1
+  }
+
+  /**
+    * Error indicating a complex instance type.
+    *
+    * @param tpe the complex type.
+    * @param sym the trait symbol.
+    * @param loc the location where the error occurred.
+    */
+  case class ComplexInstance(tpe: Type, sym: Symbol.TraitSym, loc: SourceLocation)(implicit flix: Flix) extends KindError with Recoverable {
+    override def summary: String = "Complex instance type."
+
+    def message(formatter: Formatter): String = {
+      import formatter.*
+      s""">> Complex instance type '${red(FormatType.formatType(tpe))}' in '${magenta(sym.name)}'.
+         |
+         |${code(loc, s"complex instance type")}
+         |
+         |An instance type must be a type constructor applied to zero or more distinct type variables.
+         |""".stripMargin
+    }
   }
 }

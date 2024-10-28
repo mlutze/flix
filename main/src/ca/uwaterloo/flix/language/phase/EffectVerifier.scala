@@ -22,7 +22,7 @@ import ca.uwaterloo.flix.language.ast.Type.eraseTopAliases
 import ca.uwaterloo.flix.language.ast.shared.Scope
 import ca.uwaterloo.flix.language.phase.unification.{Substitution, Unification}
 import ca.uwaterloo.flix.util.*
-import ca.uwaterloo.flix.util.collection.ListMap
+import ca.uwaterloo.flix.util.collection.{ListMap, MapOps}
 
 /**
   * Performs a re-checking of the effects in the program.
@@ -43,7 +43,7 @@ object EffectVerifier {
     if (flix.options.xverifyeffects) {
       ParOps.parMapValues(root.defs)(visitDef(_)(root.eqEnv, flix))
       ParOps.parMapValues(root.sigs)(visitSig(_)(root.eqEnv, flix))
-      ParOps.parMapValues(root.instances)(ins => ins.foreach(visitInstance(_)(root.eqEnv, flix)))
+      ParOps.parMapValues(root.instances)(ins => ins.values.foreach(visitInstance(_)(root.eqEnv, flix)))
     }
   }
 

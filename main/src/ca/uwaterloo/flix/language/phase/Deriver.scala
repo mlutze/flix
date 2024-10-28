@@ -24,6 +24,7 @@ import ca.uwaterloo.flix.language.dbg.AstPrinter.DebugKindedAst
 import ca.uwaterloo.flix.language.errors.DerivationError
 import ca.uwaterloo.flix.language.phase.util.PredefinedTraits
 import ca.uwaterloo.flix.util.ParOps
+import ca.uwaterloo.flix.util.collection.MapOps
 
 import java.util.concurrent.ConcurrentLinkedQueue
 import scala.jdk.CollectionConverters.*
@@ -50,12 +51,19 @@ object Deriver {
 
   def run(root: KindedAst.Root)(implicit flix: Flix): (KindedAst.Root, List[DerivationError]) = flix.phaseNew("Deriver") {
     implicit val sctx: SharedContext = SharedContext.mk()
-    val derivedInstances = ParOps.parMap(root.enums.values)(getDerivedInstances(_, root)).flatten
-    val newInstances = derivedInstances.foldLeft(root.instances) {
-      case (acc, inst) =>
-        val accInsts = acc.getOrElse(inst.trt.sym, Nil)
-        acc + (inst.trt.sym -> (inst :: accInsts))
+    val derivedInstances = ParOps.parMap(root.enums.values) {
+      enum0 => enum0.tpe.typeConstructor.get -> getDerivedInstances(enum0, root)
     }
+
+    var newInstances = root.instances
+
+    for {
+      (tycon, insts) <- derivedInstances
+      inst <- insts
+    } {
+      newInstances = MapOps.addNested(newInstances, inst.trt.sym, tycon, inst)
+    }
+
     (root.copy(instances = newInstances), sctx.errors.asScala.toList)
   }
 

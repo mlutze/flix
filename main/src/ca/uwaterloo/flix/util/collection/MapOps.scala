@@ -46,4 +46,13 @@ object MapOps {
         }
     }.toMap
   }
+
+  /**
+    * Adds the mapping (k1 -> (k2 -> v)) to the nested map.
+    */
+  def addNested[K1, K2, V](m: Map[K1, Map[K2, V]], k1: K1, k2: K2, v: V): Map[K1, Map[K2, V]] = {
+    val oldInnerMap = m.getOrElse(k1, Map.empty)
+    val newInnerMap = oldInnerMap + (k2 -> v)
+    m + (k1 -> newInnerMap)
+  }
 }

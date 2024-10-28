@@ -29,7 +29,7 @@ object TypedAst {
 
   case class Root(modules: Map[Symbol.ModuleSym, List[Symbol]],
                   traits: Map[Symbol.TraitSym, Trait],
-                  instances: Map[Symbol.TraitSym, List[Instance]],
+                  instances: Map[Symbol.TraitSym, Map[TypeConstructor, Instance]],
                   sigs: Map[Symbol.SigSym, Sig],
                   defs: Map[Symbol.DefnSym, Def],
                   enums: Map[Symbol.EnumSym, Enum],

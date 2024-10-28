@@ -24,7 +24,7 @@ import ca.uwaterloo.flix.language.phase.typer.{ConstraintGen, ConstraintSolver, 
 import ca.uwaterloo.flix.language.phase.unification.{Substitution, TraitEnv}
 import ca.uwaterloo.flix.util.*
 import ca.uwaterloo.flix.util.Validation.{mapN, traverse}
-import ca.uwaterloo.flix.util.collection.ListMap
+import ca.uwaterloo.flix.util.collection.{ListMap, MapOps}
 
 object Typer {
 
@@ -49,7 +49,7 @@ object Typer {
       case (traits, instances, defs) =>
         val sigs = traits.values.flatMap(_.sigs).map(sig => sig.sym -> sig).toMap
         val modules = collectModules(root)
-        TypedAst.Root(modules, traits, instances.m, sigs, defs, enums, structs, restrictableEnums, effs, typeAliases, root.uses, root.entryPoint, Set.empty, root.sources, traitEnv.toMap, eqEnv, root.names, precedenceGraph)
+        TypedAst.Root(modules, traits, instances, sigs, defs, enums, structs, restrictableEnums, effs, typeAliases, root.uses, root.entryPoint, Set.empty, root.sources, traitEnv.toMap, eqEnv, root.names, precedenceGraph)
     }
 
   }(DebugValidation())
@@ -117,16 +117,16 @@ object Typer {
   /**
     * Creates a trait environment from the traits and instances in the root.
     */
-  private def mkTraitEnv(traits0: Map[Symbol.TraitSym, KindedAst.Trait], instances0: Map[Symbol.TraitSym, List[KindedAst.Instance]])(implicit flix: Flix): TraitEnv = {
+  private def mkTraitEnv(traits0: Map[Symbol.TraitSym, KindedAst.Trait], instances0: Map[Symbol.TraitSym, Map[TypeConstructor, KindedAst.Instance]])(implicit flix: Flix): TraitEnv = {
       val m = traits0.map {
         case (traitSym, trt) =>
-          val instances = instances0.getOrElse(traitSym, Nil)
+          val instances = instances0.getOrElse(traitSym, Map.empty)
           val envInsts = instances.map {
-            case KindedAst.Instance(_, _, _, _, tpe, tconstrs, _, _, _, _) => Ast.Instance(tpe, tconstrs)
+            case (_, KindedAst.Instance(_, _, _, _, tpe, tconstrs, _, _, _, _)) => Ast.Instance(tpe, tconstrs)
           }
           // ignore the super trait parameters since they should all be the same as the trait param
           val superTraits = trt.superTraits.map(_.head.sym)
-          (traitSym, Ast.TraitContext(superTraits, envInsts))
+          (traitSym, Ast.TraitContext(superTraits, envInsts.toList))
       }
       TraitEnv(m)
     }
@@ -134,10 +134,10 @@ object Typer {
   /**
     * Creates an equality environment from the traits and instances in the root.
     */
-  private def mkEqualityEnv(traits0: Map[Symbol.TraitSym, KindedAst.Trait], instances0: Map[Symbol.TraitSym, List[KindedAst.Instance]])(implicit flix: Flix): ListMap[Symbol.AssocTypeSym, Ast.AssocTypeDef] = {
+  private def mkEqualityEnv(traits0: Map[Symbol.TraitSym, KindedAst.Trait], instances0: Map[Symbol.TraitSym, Map[TypeConstructor, KindedAst.Instance]])(implicit flix: Flix): ListMap[Symbol.AssocTypeSym, Ast.AssocTypeDef] = {
     val assocs = for {
       (traitSym, trt) <- traits0.iterator
-      inst <- instances0.getOrElse(traitSym, Nil)
+      (_, inst) <- instances0.getOrElse(traitSym, Map.empty)
       assocSig <- trt.assocs
       assocDefOpt = inst.assocs.find(_.sym.sym == assocSig.sym)
       assocDef = assocDefOpt match {
@@ -254,20 +254,9 @@ object Typer {
     *
     * Returns [[Err]] if a definition fails to type check.
     */
-  private def visitInstances(root: KindedAst.Root, traitEnv: TraitEnv, eqEnv: ListMap[Symbol.AssocTypeSym, Ast.AssocTypeDef])(implicit flix: Flix): Validation[ListMap[Symbol.TraitSym, TypedAst.Instance], TypeError] = {
-      val instances0 = for {
-        (_, insts) <- root.instances
-        inst <- insts
-      } yield inst
-
-      val instancesVal = ParOps.parTraverse(instances0)(visitInstance(_, root, traitEnv, eqEnv))
-
-      mapN(instancesVal) {
-        case instances =>
-          val map = instances.map {
-            case instance => instance.trt.sym -> instance
-          }
-          ListMap.from(map)
+  private def visitInstances(root: KindedAst.Root, traitEnv: TraitEnv, eqEnv: ListMap[Symbol.AssocTypeSym, Ast.AssocTypeDef])(implicit flix: Flix): Validation[Map[Symbol.TraitSym, Map[TypeConstructor, TypedAst.Instance]], TypeError] = {
+      ParOps.parTraverseValues(root.instances) {
+        case map => Validation.traverseValues(map)(visitInstance(_, root, traitEnv, eqEnv))
       }
     }
 

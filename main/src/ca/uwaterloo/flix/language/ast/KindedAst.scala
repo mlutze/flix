@@ -28,7 +28,7 @@ object KindedAst {
   val empty: Root = Root(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, None, Map.empty, MultiMap.empty)
 
   case class Root(traits: Map[Symbol.TraitSym, Trait],
-                  instances: Map[Symbol.TraitSym, List[Instance]],
+                  instances: Map[Symbol.TraitSym, Map[TypeConstructor, KindedAst.Instance]],
                   defs: Map[Symbol.DefnSym, Def],
                   enums: Map[Symbol.EnumSym, Enum],
                   structs: Map[Symbol.StructSym, Struct],
