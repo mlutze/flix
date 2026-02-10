@@ -213,6 +213,7 @@ object Library {
     "TcpConnectWithResult.flix" -> LocalResource.get("/src/library/TcpConnectWithResult.flix"),
     "TcpServer.flix" -> LocalResource.get("/src/library/TcpServer.flix"),
     "TcpSocket.flix" -> LocalResource.get("/src/library/TcpSocket.flix"),
+    "Time.flix" -> LocalResource.get("/src/library/Time.flix"),
     "TimeUnit.flix" -> LocalResource.get("/src/library/TimeUnit.flix"),
     "ToFlix.flix" -> LocalResource.get("/src/library/ToFlix.flix"),
     "ToJava.flix" -> LocalResource.get("/src/library/ToJava.flix"),

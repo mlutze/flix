@@ -117,7 +117,6 @@ pub mod FileRead {
     use IoError.IoError
     use IoError.ErrorKind
 
-    @DefaultHandler
     pub def handleHack(f: a -> b \ ef): a -> b \ (ef - FileRead) + IO = x ->
         run {
             f(x)
@@ -135,12 +134,13 @@ pub mod FileRead {
             def size(filename, k) = ???
             def read(filename, k) = ???
             def readLines(filename, k) =
-                List#{
-                    "walk dog
-                    "mail package"
-                    "buy groceries"
+                let list = List#{
+                    "walk dog",
+                    "mail package",
+                    "buy groceries",
                     "call mom"
-                }
+                };
+                k(list)
             def readBytes(filename, k) = ???
             def list(filename, k) = ???
         }
@@ -292,6 +292,12 @@ pub mod FileRead {
     /// In other words, re-interprets the `FileRead` effect using the `IO` effect.
     ///
     pub def runWithIO(f: Unit -> a \ ef): Result[IoError, a] \ (ef - FileRead) + {IO} = handle(f)()
+
+    ///
+    /// Runs the `FileRead` effect of the given function `f` using the hacked handler.
+    ///
+    @DefaultHandler
+    pub def runHack(f: Unit -> a \ ef): a \ (ef - FileRead) + IO = handleHack(f)()
 
     ///
     /// Returns the attributes of the given file `f`.
