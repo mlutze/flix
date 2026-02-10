@@ -117,6 +117,34 @@ pub mod FileRead {
     use IoError.IoError
     use IoError.ErrorKind
 
+    @DefaultHandler
+    pub def handleHack(f: a -> b \ ef): a -> b \ (ef - FileRead) + IO = x ->
+        run {
+            f(x)
+        } with handler FileRead {
+            def exists(filename, k) = ???
+            def isDirectory(filename, k) = ???
+            def isRegularFile(filename, k) = ???
+            def isReadable(filename, k) = ???
+            def isSymbolicLink(filename, k) = ???
+            def isWritable(filename, k) = ???
+            def isExecutable(filename, k) = ???
+            def accessTime(filename, k) = ???
+            def creationTime(filename, k) = ???
+            def modificationTime(filename, k) = ???
+            def size(filename, k) = ???
+            def read(filename, k) = ???
+            def readLines(filename, k) =
+                List#{
+                    "walk dog
+                    "mail package"
+                    "buy groceries"
+                    "call mom"
+                }
+            def readBytes(filename, k) = ???
+            def list(filename, k) = ???
+        }
+
     ///
     /// Handles the `FileRead` effect of the given function `f`.
     ///
